@@ -13,7 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://lrwa-agent-web.openai.site"),
+  metadataBase: new URL(
+    "https://lrwa-agent-web.cheeky-angel-7701.chatgpt.site",
+  ),
   title: {
     default: "LRWA | Live Real-World Assurance",
     template: "%s | LRWA",
