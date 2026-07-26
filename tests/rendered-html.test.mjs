@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { access, readFile } from "node:fs/promises";
 import test from "node:test";
 
@@ -104,7 +105,7 @@ test("removes starter assets and prohibited separator glyphs", async () => {
   assert.doesNotMatch(visibleCopy, /[—–]/);
   assert.doesNotMatch(
     visibleCopy,
-    /independent evidence|independent observation|source independence|logic-distinct|1,024 entries|1,024 probes|观察任务|\bintervals?\b|90% scenario|source confidence|evidence confidence/i,
+    /independent evidence|independent observation|independentSourceCount|source independence|logic-distinct|source score|1,024 entries|1,024 probes|观察任务|\bintervals?\b|90% scenario|source confidence|evidence confidence/i,
   );
   await assert.rejects(
     access(new URL("../app/_sites-preview", import.meta.url)),
@@ -112,4 +113,18 @@ test("removes starter assets and prohibited separator glyphs", async () => {
   await access(new URL("../app/icon.svg", import.meta.url));
   await access(new URL("../public/lrwa-mark.svg", import.meta.url));
   await access(new URL("README.md", projectRoot));
+});
+
+test("recomputes every fallback receipt content hash", async () => {
+  const fixture = JSON.parse(
+    await readFile(new URL("../lib/demo-evidence.json", import.meta.url), "utf8"),
+  );
+  assert.equal(fixture.length, 5);
+  for (const receipt of fixture) {
+    const { hash, ...payload } = receipt;
+    const recomputed = createHash("sha256")
+      .update(JSON.stringify(payload))
+      .digest("hex");
+    assert.equal(hash, `sha256:${recomputed}`);
+  }
 });

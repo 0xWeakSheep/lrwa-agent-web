@@ -16,18 +16,18 @@ evidence, uncertainty and a deterministic replay.
 ## Public demo and reviewer materials
 
 - Product demo: https://lrwa-agent-web.cheeky-angel-7701.chatgpt.site
-- 90-second film: https://lrwa-agent-web.cheeky-angel-7701.chatgpt.site/materials/LRWA_OpenArena_Demo_90s.mp4
-- Seed deck: https://lrwa-agent-web.cheeky-angel-7701.chatgpt.site/materials/LRWA_Seed_Deck.pdf
+- 90-second film: https://raw.githubusercontent.com/0xWeakSheep/lrwa-agent-web/main/public/materials/LRWA_OpenArena_Demo_90s.mp4
+- Seed deck: https://raw.githubusercontent.com/0xWeakSheep/lrwa-agent-web/main/public/materials/LRWA_Seed_Deck.pdf
 - Agent backend: https://github.com/0xWeakSheep/lrwa-agent
 
 ## Demo flow
 
 1. Review four material business claims and a 1,024-unit planned probe quota.
-2. Approve the explicit human and policy gate.
+2. Start the synthetic mission through the explicit demo interaction gate.
 3. Watch the Reality Twin mission through the backend SSE stream or local
    deterministic fallback.
 4. Inspect the GMV finding and trace it through five evidence artifacts.
-5. Approve a 20% corporate-order counterfactual and replay the same seed.
+5. Inspect a 20% corporate-order counterfactual and run the same-seed replay.
 6. Turn remaining uncertainty into targeted evidence requests.
 
 ## Routes

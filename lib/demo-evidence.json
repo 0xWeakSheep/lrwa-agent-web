@@ -1,0 +1,72 @@
+[
+  {
+    "id": "ev-storefront-01",
+    "claimId": "claim-monthly-gmv",
+    "title": "午间可下单门店覆盖",
+    "channel": "storefront",
+    "stance": "contradicts",
+    "sourceLabel": "授权零售沙箱 · 门店状态接口",
+    "observedAt": "2026-07-27T12:18:00+08:00",
+    "permission": "SIMULATED",
+    "hash": "sha256:f938fa5972671e53c58f835711f153f039e6618be0c74b361cbb0006780d54f7",
+    "agent": "Geo Observer",
+    "tool": "storefront.availability.sample",
+    "summary": "48 家申报门店中，39 家在主要午间时段持续可下单。"
+  },
+  {
+    "id": "ev-demand-01",
+    "claimId": "claim-monthly-gmv",
+    "title": "分层订单吞吐代理",
+    "channel": "demand",
+    "stance": "contradicts",
+    "sourceLabel": "合成消费者面板 · 订单任务",
+    "observedAt": "2026-07-27T13:04:00+08:00",
+    "permission": "SIMULATED",
+    "hash": "sha256:6f6c4e448b3873c9a981549547d13349dda68f43202101a1417585a141a90239",
+    "agent": "Demand Observer",
+    "tool": "orders.synthetic.checkout",
+    "summary": "按地区、时段和画像分层后，单店日均订单估计明显低于公司材料。"
+  },
+  {
+    "id": "ev-digital-01",
+    "claimId": "claim-monthly-gmv",
+    "title": "跨渠道营业状态一致性",
+    "channel": "support",
+    "stance": "contradicts",
+    "sourceLabel": "授权渠道沙箱 · 数字门店索引",
+    "observedAt": "2026-07-27T13:12:00+08:00",
+    "permission": "SIMULATED",
+    "hash": "sha256:0951077373b95513fb304b7dd9df4884f632f39000edf93140b998c5b18ed679",
+    "agent": "Channel Auditor",
+    "tool": "channels.simulated.listing",
+    "summary": "三个模拟渠道的营业状态交叉结果支持 39 家活跃门店估计。"
+  },
+  {
+    "id": "ev-supply-01",
+    "claimId": "claim-monthly-gmv",
+    "title": "杯具与咖啡豆补货上限",
+    "channel": "supply",
+    "stance": "contradicts",
+    "sourceLabel": "授权供应链沙箱 · 周度补货记录",
+    "observedAt": "2026-07-27T13:19:00+08:00",
+    "permission": "SIMULATED",
+    "hash": "sha256:b682253b39a82ae1f39a8f08792b801ac34f5df5d8100c88ef08608d9358c9fe",
+    "agent": "Supply Observer",
+    "tool": "supply.capacity.estimate",
+    "summary": "过去四周补货量支持的订单上限，与申报销量存在较大缺口。"
+  },
+  {
+    "id": "ev-staffing-01",
+    "claimId": "claim-monthly-gmv",
+    "title": "排班工时容量",
+    "channel": "staffing",
+    "stance": "context",
+    "sourceLabel": "授权运营沙箱 · 匿名排班聚合",
+    "observedAt": "2026-07-27T13:31:00+08:00",
+    "permission": "SIMULATED",
+    "hash": "sha256:22ed54f6359353d965d1b64e40a66b233112708eaa0c2a4d783194c6f0099071",
+    "agent": "Operations Observer",
+    "tool": "staffing.capacity.check",
+    "summary": "现有排班可解释部分销量差异，但不能支持公司申报的峰值吞吐。"
+  }
+]

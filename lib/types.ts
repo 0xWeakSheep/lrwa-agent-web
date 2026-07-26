@@ -57,7 +57,6 @@ export interface EvidenceArtifact {
   hash: string;
   agent: string;
   tool: string;
-  confidence: number;
   summary: string;
 }
 
@@ -102,7 +101,6 @@ export interface Finding {
   upperBound: number;
   unit: string;
   confidence: number;
-  independentSourceCount: number;
   alternativeHypotheses: string[];
   nextActions: string[];
 }

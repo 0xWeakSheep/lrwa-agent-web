@@ -196,7 +196,7 @@ export function FindingsWorkspace() {
                 <div>
                   <small>{channelLabels[evidence.channel]}</small>
                   <strong>{evidence.title}</strong>
-                  <span>{evidence.confidence.toFixed(2)} source score</span>
+                  <span>{evidence.permission} receipt</span>
                 </div>
                 <ChevronRight size={16} aria-hidden />
               </button>

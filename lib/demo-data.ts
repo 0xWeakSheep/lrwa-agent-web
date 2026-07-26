@@ -4,6 +4,7 @@ import type {
   InvestigationEvent,
   StoreSignal,
 } from "./types";
+import demoEvidenceFixture from "./demo-evidence.json";
 
 const districts = ["静安", "徐汇", "浦东", "长宁", "杨浦", "普陀"];
 
@@ -23,83 +24,7 @@ function buildStores(): StoreSignal[] {
   });
 }
 
-export const demoEvidence: EvidenceArtifact[] = [
-  {
-    id: "ev-storefront-01",
-    claimId: "claim-monthly-gmv",
-    title: "午间可下单门店覆盖",
-    channel: "storefront",
-    stance: "contradicts",
-    sourceLabel: "授权零售沙箱 · 门店状态接口",
-    observedAt: "2026-07-27T12:18:00+08:00",
-    permission: "SIMULATED",
-    hash: "sha256:7c12d8e3a1f0b9c4",
-    agent: "Geo Observer",
-    tool: "storefront.availability.sample",
-    confidence: 0.91,
-    summary: "48 家申报门店中，39 家在主要午间时段持续可下单。",
-  },
-  {
-    id: "ev-demand-01",
-    claimId: "claim-monthly-gmv",
-    title: "分层订单吞吐代理",
-    channel: "demand",
-    stance: "contradicts",
-    sourceLabel: "合成消费者面板 · 订单任务",
-    observedAt: "2026-07-27T13:04:00+08:00",
-    permission: "SIMULATED",
-    hash: "sha256:22ab914a63f8d7c1",
-    agent: "Demand Observer",
-    tool: "orders.synthetic.checkout",
-    confidence: 0.86,
-    summary: "按地区、时段和画像分层后，单店日均订单估计明显低于公司材料。",
-  },
-  {
-    id: "ev-digital-01",
-    claimId: "claim-monthly-gmv",
-    title: "跨渠道营业状态一致性",
-    channel: "support",
-    stance: "contradicts",
-    sourceLabel: "授权渠道沙箱 · 数字门店索引",
-    observedAt: "2026-07-27T13:12:00+08:00",
-    permission: "SIMULATED",
-    hash: "sha256:6d1e984c117df342",
-    agent: "Channel Auditor",
-    tool: "channels.simulated.listing",
-    confidence: 0.84,
-    summary: "三个模拟渠道的营业状态交叉结果支持 39 家活跃门店估计。",
-  },
-  {
-    id: "ev-supply-01",
-    claimId: "claim-monthly-gmv",
-    title: "杯具与咖啡豆补货上限",
-    channel: "supply",
-    stance: "contradicts",
-    sourceLabel: "授权供应链沙箱 · 周度补货记录",
-    observedAt: "2026-07-27T13:19:00+08:00",
-    permission: "SIMULATED",
-    hash: "sha256:39fbdcb7ed441206",
-    agent: "Supply Observer",
-    tool: "supply.capacity.estimate",
-    confidence: 0.89,
-    summary: "过去四周补货量支持的订单上限，与申报销量存在较大缺口。",
-  },
-  {
-    id: "ev-staffing-01",
-    claimId: "claim-monthly-gmv",
-    title: "排班工时容量",
-    channel: "staffing",
-    stance: "context",
-    sourceLabel: "授权运营沙箱 · 匿名排班聚合",
-    observedAt: "2026-07-27T13:31:00+08:00",
-    permission: "SIMULATED",
-    hash: "sha256:d3c821af14b0ef99",
-    agent: "Operations Observer",
-    tool: "staffing.capacity.check",
-    confidence: 0.78,
-    summary: "现有排班可解释部分销量差异，但不能支持公司申报的峰值吞吐。",
-  },
-];
+export const demoEvidence = demoEvidenceFixture as EvidenceArtifact[];
 
 export const demoCase: DemoCase = {
   id: "morrow-coffee",
@@ -195,7 +120,6 @@ export const demoCase: DemoCase = {
     upperBound: 2140000,
     unit: "元",
     confidence: 0.88,
-    independentSourceCount: 5,
     alternativeHypotheses: [
       "企业团购订单未被消费者任务覆盖",
       "部分门店在第三方渠道之外完成交易",
