@@ -41,10 +41,10 @@ export const metadata: Metadata = {
     siteName: "LRWA",
     images: [
       {
-        url: "/og.png",
+        url: "/lrwa-cinematic-hero.png",
         width: 1672,
         height: 941,
-        alt: "LRWA evidence network across a dark city map",
+        alt: "LRWA verification network illuminating a city at night",
       },
     ],
   },
@@ -53,7 +53,7 @@ export const metadata: Metadata = {
     title: "LRWA | Live Real-World Assurance",
     description:
       "Test the world behind the spreadsheet with governed verification agents.",
-    images: ["/og.png"],
+    images: ["/lrwa-cinematic-hero.png"],
   },
 };
 

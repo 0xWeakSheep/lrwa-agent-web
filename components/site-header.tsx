@@ -18,9 +18,8 @@ export function SiteHeader() {
     <header className="site-header">
       <Brand />
       <nav aria-label="Primary navigation">
-        <a href="#method-title">Method</a>
-        <a href="#governance-title">Governance</a>
-        <Link href="/cases/morrow-coffee">Open demo</Link>
+        <Link href="/cases/morrow-coffee/live">Live mission</Link>
+        <Link href="/cases/morrow-coffee/findings">Evidence</Link>
       </nav>
     </header>
   );

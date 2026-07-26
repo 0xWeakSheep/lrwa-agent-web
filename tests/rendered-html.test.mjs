@@ -35,10 +35,13 @@ async function renderedHtml(pathname) {
 test("server-renders the LRWA landing page and disclosure", async () => {
   const html = await renderedHtml("/");
   assert.match(html, /<title>Live Real-World Assurance \| LRWA<\/title>/i);
-  assert.match(html, /Test the world behind the spreadsheet/);
-  assert.match(html, /Run simulated diligence/);
-  assert.match(html, /Fictional company/);
-  assert.match(html, /5 evidence families/);
+  assert.match(html, /Verify the world/);
+  assert.match(html, /behind the numbers/);
+  assert.match(html, /Run the demo/);
+  assert.match(html, /Fictional case/);
+  assert.match(html, /independent evidence families/);
+  assert.match(html, /lrwa-cinematic-hero\.png/);
+  assert.doesNotMatch(html, /Compile the claim|Observe within declared boundaries/);
   assert.doesNotMatch(html, /Your site is taking shape|react-loading-skeleton/);
 });
 
