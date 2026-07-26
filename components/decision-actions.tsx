@@ -215,7 +215,7 @@ export function DecisionActions() {
           </div>
           <div>
             <dt>Evidence lineage</dt>
-            <dd>5 signed artifacts</dd>
+            <dd>5 content-hashed receipts</dd>
           </div>
           <div>
             <dt>Replay lineage</dt>

@@ -75,17 +75,21 @@ function formatMillions(value: number) {
   return `¥${(value / 1_000_000).toFixed(2)}m`;
 }
 
-function mapBackendEvent(raw: BackendEvent, index: number): InvestigationEvent {
+function mapBackendEvent(
+  raw: BackendEvent,
+  index: number,
+  completedProbes: number,
+): InvestigationEvent {
   const localFrames = createLocalDemoEvents();
   const type = raw.type ?? "";
-  const completed =
+  const progress =
     type === "INVESTIGATION_COMPLETED"
       ? 1
-      : Math.min(0.92, Math.max(0.04, (index + 1) / 17));
+      : Math.min(1, Math.max(0, completedProbes / 1024));
   const frameIndex =
     type === "INVESTIGATION_COMPLETED"
       ? localFrames.length - 1
-      : Math.min(localFrames.length - 2, Math.floor(completed * 6));
+      : Math.min(localFrames.length - 2, Math.floor(progress * 6));
   const frame = localFrames[frameIndex] ?? localFrames[0];
   const apiMetrics: Partial<InvestigationMetrics> = {};
   const metricKeys = [
@@ -115,8 +119,7 @@ function mapBackendEvent(raw: BackendEvent, index: number): InvestigationEvent {
           ? "estimate.updated"
           : type === "REPLAY_CREATED"
             ? "replay.started"
-            : type === "AGENT_DISPATCHED" ||
-                type === "AGENT_TASK_COMPLETED"
+            : type === "AGENT_TASK_COMPLETED"
               ? "probe.batch.completed"
               : "investigation.started";
 
@@ -133,7 +136,7 @@ function mapBackendEvent(raw: BackendEvent, index: number): InvestigationEvent {
         : {
             ...frame?.metrics,
             ...apiMetrics,
-            completedProbes: Math.round(1024 * completed),
+            completedProbes,
           },
   };
 }
@@ -226,6 +229,7 @@ export function LiveMission() {
 
     const source = new EventSource(getEventStreamUrl(investigationId));
     const apiEvents: InvestigationEvent[] = [];
+    let completedProbes = 0;
     let received = false;
     let fallbackScheduled = false;
 
@@ -233,7 +237,20 @@ export function LiveMission() {
       try {
         received = true;
         const raw = JSON.parse(message.data) as BackendEvent;
-        apiEvents.push(mapBackendEvent(raw, apiEvents.length));
+        if (
+          raw.type === "AGENT_TASK_COMPLETED" &&
+          typeof raw.data?.sampleSize === "number"
+        ) {
+          completedProbes = Math.min(
+            1024,
+            completedProbes + raw.data.sampleSize,
+          );
+        } else if (raw.type === "INVESTIGATION_COMPLETED") {
+          completedProbes = 1024;
+        }
+        apiEvents.push(
+          mapBackendEvent(raw, apiEvents.length, completedProbes),
+        );
       } catch {
         // An invalid event is ignored; the deterministic fallback stays armed.
       }
@@ -465,7 +482,7 @@ export function LiveMission() {
             {events.length === 0 && (
               <li className="event-empty">
                 <span className="event-loader" aria-hidden />
-                Waiting for the first signed event
+                Waiting for the first recorded event
               </li>
             )}
             {[...events].reverse().slice(0, 7).map((event) => (

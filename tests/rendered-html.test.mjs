@@ -136,4 +136,5 @@ test("subscribes to every task-policy lifecycle event", async () => {
   );
   assert.match(liveMission, /"TOOL_POLICY_CHECKED"/);
   assert.match(liveMission, /"AGENT_TASK_COMPLETED"/);
+  assert.doesNotMatch(liveMission, /type === "AGENT_DISPATCHED"/);
 });
