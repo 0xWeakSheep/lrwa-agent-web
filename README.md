@@ -33,7 +33,7 @@ evidence, uncertainty and a deterministic replay.
 ## Routes
 
 - `/` product story and live product preview
-- `/cases/morrow-coffee` mission plan and approval gate
+- `/cases/morrow-coffee` mission plan and demo interaction gate
 - `/cases/morrow-coffee/live` agent mission control
 - `/cases/morrow-coffee/findings` evidence ledger and skeptic replay
 - `/cases/morrow-coffee/actions` decision action queue
@@ -61,7 +61,7 @@ localhost unless that URL was explicitly configured.
 
 ## API integration
 
-The approval gate drives the full backend lifecycle:
+The unauthenticated demo interaction gate drives the full backend lifecycle:
 
 ```text
 POST /v1/demo/cases
