@@ -13,6 +13,13 @@ evidence, uncertainty and a deterministic replay.
 > fictional and illustrative. The demo does not contact real merchants, place
 > real orders, scrape live platforms or process personal information.
 
+## Public demo and reviewer materials
+
+- Product demo: https://lrwa-agent-web.cheeky-angel-7701.chatgpt.site
+- 90-second film: https://lrwa-agent-web.cheeky-angel-7701.chatgpt.site/materials/LRWA_OpenArena_Demo_90s.mp4
+- Seed deck: https://lrwa-agent-web.cheeky-angel-7701.chatgpt.site/materials/LRWA_Seed_Deck.pdf
+- Agent backend: https://github.com/0xWeakSheep/lrwa-agent
+
 ## Demo flow
 
 1. Review four material business claims and a 1,024-probe mission plan.
