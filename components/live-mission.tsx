@@ -40,7 +40,9 @@ const backendEventTypes = [
   "PLAN_APPROVED",
   "INVESTIGATION_STARTED",
   "AGENT_DISPATCHED",
+  "TOOL_POLICY_CHECKED",
   "EVIDENCE_CAPTURED",
+  "AGENT_TASK_COMPLETED",
   "EVIDENCE_AUDITED",
   "ESTIMATE_COMPUTED",
   "FINDING_COMPUTED",
@@ -104,15 +106,17 @@ function mapBackendEvent(raw: BackendEvent, index: number): InvestigationEvent {
       ? "investigation.completed"
       : type === "HYPOTHESIS_RAISED"
         ? "hypothesis.raised"
-      : type === "EVIDENCE_CAPTURED"
-        ? "evidence.verified"
+        : type === "TOOL_POLICY_CHECKED" ||
+            type === "EVIDENCE_CAPTURED"
+          ? "evidence.verified"
         : type === "EVIDENCE_AUDITED"
           ? "evidence.verified"
         : type === "FINDING_COMPUTED" || type === "ESTIMATE_COMPUTED"
           ? "estimate.updated"
           : type === "REPLAY_CREATED"
             ? "replay.started"
-            : type === "AGENT_DISPATCHED"
+            : type === "AGENT_DISPATCHED" ||
+                type === "AGENT_TASK_COMPLETED"
               ? "probe.batch.completed"
               : "investigation.started";
 

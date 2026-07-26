@@ -128,3 +128,12 @@ test("recomputes every fallback receipt content hash", async () => {
     assert.equal(hash, `sha256:${recomputed}`);
   }
 });
+
+test("subscribes to every task-policy lifecycle event", async () => {
+  const liveMission = await readFile(
+    new URL("../components/live-mission.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(liveMission, /"TOOL_POLICY_CHECKED"/);
+  assert.match(liveMission, /"AGENT_TASK_COMPLETED"/);
+});
