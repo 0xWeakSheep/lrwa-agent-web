@@ -53,7 +53,7 @@ export function PlanGate() {
 
       <div className="approval-summary">
         <div>
-          <span>Maximum probes</span>
+          <span>Planned probe quota</span>
           <strong>1,024</strong>
         </div>
         <div>

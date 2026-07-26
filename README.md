@@ -22,7 +22,7 @@ evidence, uncertainty and a deterministic replay.
 
 ## Demo flow
 
-1. Review four material business claims and a 1,024-probe mission plan.
+1. Review four material business claims and a 1,024-unit planned probe quota.
 2. Approve the explicit human and policy gate.
 3. Watch the Reality Twin mission through the backend SSE stream or local
    deterministic fallback.
@@ -75,7 +75,7 @@ GET  /v1/investigations/:id/findings
 
 The replay submits `{ "corporateOrderShare": 0.2 }` and reads the resulting GMV
 finding from the API. Local fallback uses the same canonical result: ¥2.40m,
-¥2.12m to ¥2.72m interval, 27.9% gap and 82% confidence.
+¥2.12m to ¥2.72m scenario band, 27.9% gap and a 0.82 heuristic policy score.
 
 ## Technical shape
 

@@ -107,7 +107,7 @@ export default function MissionPlanPage() {
                     {claim.period}
                   </span>
                   <span className="test-status" role="cell">
-                    Cross-source estimate
+                    Five-way cross-check
                   </span>
                 </div>
               ))}
@@ -118,10 +118,10 @@ export default function MissionPlanPage() {
             <div className="panel-heading">
               <div>
                 <p className="mono-label">MISSION ORCHESTRATOR / PLAN 01</p>
-                <h2 id="channels-title">Five independent observation lanes</h2>
+                <h2 id="channels-title">Five evidence categories</h2>
               </div>
               <span className="panel-stat">
-                <strong>1,024</strong> parameterized probes
+                <strong>1,024</strong> planned probe quota
               </span>
             </div>
             <div className="channel-list">
@@ -149,12 +149,12 @@ export default function MissionPlanPage() {
           <section className="methodology-note" aria-label="Methodology note">
             <IbmWatsonDiscovery size={24} aria-hidden />
             <div>
-              <strong>High-confidence findings require independence.</strong>
+              <strong>The high policy band requires category diversity.</strong>
               <p>
                 The verifier will not label a claim supported or contradicted
-                until at least two evidence families agree. Statistical
-                calculations are deterministic and reproducible under seed
-                240727.
+                until at least two evidence categories agree. Numerical
+                calculations are deterministic under seed 240727 for this code
+                version.
               </p>
             </div>
           </section>

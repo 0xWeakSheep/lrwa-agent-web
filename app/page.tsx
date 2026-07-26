@@ -11,10 +11,10 @@ export const metadata: Metadata = {
 };
 
 const proofPoints = [
-  { value: "1,024", label: "bounded probes" },
-  { value: "5", label: "independent evidence families" },
+  { value: "1,024", label: "planned probe quota" },
+  { value: "5", label: "evidence categories" },
   { value: "SHA-256", label: "artifact lineage" },
-  { value: "1", label: "human-approved replay" },
+  { value: "1", label: "human-gated replay" },
 ];
 
 export default function Home() {

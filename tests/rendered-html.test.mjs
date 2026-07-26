@@ -39,7 +39,7 @@ test("server-renders the LRWA landing page and disclosure", async () => {
   assert.match(html, /behind the numbers/);
   assert.match(html, /Run the demo/);
   assert.match(html, /Fictional case/);
-  assert.match(html, /independent evidence families/);
+  assert.match(html, /evidence categories/);
   assert.match(html, /lrwa-cinematic-hero\.png/);
   assert.doesNotMatch(html, /Compile the claim|Observe within declared boundaries/);
   assert.doesNotMatch(html, /Your site is taking shape|react-loading-skeleton/);
@@ -85,6 +85,9 @@ test("removes starter assets and prohibited separator glyphs", async () => {
       [
         "../app/page.tsx",
         "../app/layout.tsx",
+        "../app/cases/morrow-coffee/page.tsx",
+        "../app/cases/morrow-coffee/live/page.tsx",
+        "../components/plan-gate.tsx",
         "../components/workspace-shell.tsx",
         "../components/live-mission.tsx",
         "../components/findings-workspace.tsx",
@@ -95,7 +98,12 @@ test("removes starter assets and prohibited separator glyphs", async () => {
   ]);
 
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
-  assert.doesNotMatch(sourceFiles.join("\n"), /[—–]/);
+  const visibleCopy = sourceFiles.join("\n");
+  assert.doesNotMatch(visibleCopy, /[—–]/);
+  assert.doesNotMatch(
+    visibleCopy,
+    /independent evidence|independent observation|source independence|logic-distinct|1,024 entries|1,024 probes|观察任务|\bintervals?\b|90% scenario|source confidence|evidence confidence/i,
+  );
   await assert.rejects(
     access(new URL("../app/_sites-preview", import.meta.url)),
   );

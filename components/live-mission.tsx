@@ -58,7 +58,7 @@ const agents = [
   ["Supply Observer", "Capacity"],
   ["Operations Observer", "Staffing"],
   ["Evidence Verifier", "Audit ledger"],
-  ["Statistician", "Intervals"],
+  ["Statistician", "Scenario bands"],
   ["Skeptic Agent", "Counterfactual"],
 ];
 
@@ -358,7 +358,7 @@ export function LiveMission() {
             </div>
             <div className="probe-count">
               <strong>{metrics.completedProbes.toLocaleString("en-US")}</strong>
-              <span>/ 1,024 probes</span>
+              <span>/ 1,024 planned quota</span>
             </div>
           </div>
           <StoreField stores={demoCase.stores} progress={progress} />
@@ -411,8 +411,8 @@ export function LiveMission() {
               </h2>
             </div>
             <span className="confidence-value">
-              {Math.round(metrics.confidence * 100)}%
-              <small>confidence</small>
+              {metrics.confidence.toFixed(2)}
+              <small>policy score</small>
             </span>
           </div>
           <div className="estimate-chart">
@@ -436,7 +436,7 @@ export function LiveMission() {
           </div>
           <div className="estimate-range">
             <span>
-              Interval
+              Scenario band
               <strong>
                 {formatMillions(metrics.lowerBound)} to{" "}
                 {formatMillions(metrics.upperBound)}

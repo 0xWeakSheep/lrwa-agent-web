@@ -109,7 +109,7 @@ export const demoCase: DemoCase = {
   sector: "连锁零售",
   scenarioLabel: "沙箱案例 · 虚构企业 · 示例证据",
   summary:
-    "公司材料声称 6 月 GMV 为 333 万元。LRWA 将该主张拆解为门店、需求、供应链、客服和用工五类独立信号。",
+    "公司材料声称 6 月 GMV 为 333 万元。LRWA 将该主张拆解为门店、需求、供应链、客服和用工五类证据。",
   status: "planned",
   claims: [
     {
@@ -188,7 +188,7 @@ export const demoCase: DemoCase = {
     verdict: "contradicted",
     headline: "申报 GMV 未获得现实信号支持",
     summary:
-      "五类独立证据将 6 月 GMV 收敛至 172 万至 214 万元。即使加入企业团购假设，差异仍具有投资决策意义。",
+      "五类证据将 6 月 GMV 的固定情景带收敛至 172 万至 214 万元。即使加入企业团购假设，差异仍具有投资决策意义。",
     claimedValue: 3330000,
     estimatedValue: 1920000,
     lowerBound: 1720000,
@@ -215,7 +215,7 @@ const eventBlueprint: Omit<InvestigationEvent, "id" | "occurredAt">[] = [
     sequence: 1,
     type: "investigation.started",
     agent: "Mission Orchestrator",
-    message: "已锁定随机种子、权限清单和 1,024 个观察任务。",
+    message: "已锁定随机种子、权限清单和 1,024 个参数化探针配额。",
     metrics: { completedProbes: 0, confidence: 0 },
   },
   {
@@ -245,7 +245,7 @@ const eventBlueprint: Omit<InvestigationEvent, "id" | "occurredAt">[] = [
     sequence: 4,
     type: "estimate.updated",
     agent: "Statistician",
-    message: "需求与门店信号交叉后，GMV 区间首次低于申报值。",
+    message: "需求与门店信号交叉后，GMV 情景带首次低于申报值。",
     metrics: {
       completedProbes: 512,
       activeStores: 41,
@@ -260,7 +260,7 @@ const eventBlueprint: Omit<InvestigationEvent, "id" | "occurredAt">[] = [
     sequence: 5,
     type: "evidence.verified",
     agent: "Evidence Verifier",
-    message: "订单吞吐代理和供应链补货记录来自两个独立证据族。",
+    message: "订单吞吐代理和供应链补货记录来自两个证据类别。",
     metrics: { completedProbes: 704, confidence: 0.76 },
     evidence: demoEvidence[3],
   },

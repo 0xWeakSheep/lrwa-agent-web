@@ -210,8 +210,8 @@ export function DecisionActions() {
             <dd>240727</dd>
           </div>
           <div>
-            <dt>Probe manifest</dt>
-            <dd>1,024 entries</dd>
+            <dt>Parameterized probe quota</dt>
+            <dd>1,024 planned units</dd>
           </div>
           <div>
             <dt>Evidence lineage</dt>

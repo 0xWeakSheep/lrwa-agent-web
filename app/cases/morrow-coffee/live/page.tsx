@@ -13,7 +13,7 @@ export default function LiveMissionPage() {
     <WorkspaceShell
       activeStep="live"
       title="Watch the estimate change as evidence arrives."
-      description="Six specialist agents coordinate 1,024 parameterized probes. Language models plan and challenge; deterministic code calculates evidence scores, intervals and hashes."
+      description="Specialist agents allocate a 1,024-unit parameterized probe quota. Language models plan and challenge; deterministic code calculates policy scores, scenario bands and hashes."
     >
       <LiveMission />
     </WorkspaceShell>

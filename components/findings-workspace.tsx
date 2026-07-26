@@ -98,8 +98,8 @@ export function FindingsWorkspace() {
         </div>
         <h2>{demoCase.finding.headline}</h2>
         <p className="finding-lead">
-          Five independent evidence families place June GMV below the company
-          claim. This is a diligence signal, not a finding of misconduct.
+          Five evidence categories place June GMV below the company claim.
+          This is a synthetic diligence signal, not a finding of misconduct.
         </p>
         <div className="finding-stat-grid">
           <div>
@@ -111,7 +111,7 @@ export function FindingsWorkspace() {
             <strong>{formatMillions(comparisonEstimate)}</strong>
           </div>
           <div>
-            <span>90% interval</span>
+            <span>Fixed scenario band</span>
             <strong>
               {formatMillions(comparisonLower)} to {formatMillions(comparisonUpper)}
             </strong>
@@ -163,13 +163,12 @@ export function FindingsWorkspace() {
 
         <div className="confidence-explainer">
           <div>
-            <span>Evidence confidence</span>
-            <strong>{Math.round(comparisonConfidence * 100)}%</strong>
+            <span>Heuristic policy score</span>
+            <strong>{comparisonConfidence.toFixed(2)}</strong>
           </div>
           <p>
-            Confidence combines source independence, sample coverage,
-            permission checks and agreement between evidence families. It is
-            not the probability that fraud occurred.
+            This rule-based score combines category coverage and agreement. It
+            is not a calibrated probability, fraud finding or audit opinion.
           </p>
         </div>
       </section>
@@ -197,9 +196,7 @@ export function FindingsWorkspace() {
                 <div>
                   <small>{channelLabels[evidence.channel]}</small>
                   <strong>{evidence.title}</strong>
-                  <span>
-                    {Math.round(evidence.confidence * 100)}% source confidence
-                  </span>
+                  <span>{evidence.confidence.toFixed(2)} source score</span>
                 </div>
                 <ChevronRight size={16} aria-hidden />
               </button>
@@ -317,8 +314,8 @@ export function FindingsWorkspace() {
               <strong>Gap narrows, conclusion remains unsupported.</strong>
               <p>
                 Estimate rises to {formatMillions(replayFinding.estimatedValue)}
-                {" "}and confidence falls to{" "}
-                {Math.round(replayFinding.confidence * 100)}%. The remaining{" "}
+                {" "}and the policy score falls to{" "}
+                {replayFinding.confidence.toFixed(2)}. The remaining{" "}
                 {replayFinding.gapPercent.toFixed(1)}% gap is still material.
               </p>
             </div>
