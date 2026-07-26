@@ -100,3 +100,6 @@ npm test
 
 `npm test` creates a production build and verifies all five rendered routes,
 synthetic-data disclosures and starter-code removal.
+
+See [ASSET_CREDITS.md](./ASSET_CREDITS.md) for generated-asset provenance and
+third-party license acknowledgements.
