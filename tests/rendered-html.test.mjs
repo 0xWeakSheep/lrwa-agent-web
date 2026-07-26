@@ -78,6 +78,11 @@ test("server-renders the complete case workflow", async () => {
     assert.match(html, marker);
     assert.match(html, /Synthetic demo data/);
     assert.match(html, /fictional company/i);
+    if (pathname.endsWith("/findings")) {
+      assert.match(html, /Planned quota/);
+      assert.match(html, /Method/);
+      assert.match(html, />320</);
+    }
   }
 });
 
@@ -105,7 +110,7 @@ test("removes starter assets and prohibited separator glyphs", async () => {
   assert.doesNotMatch(visibleCopy, /[—–]/);
   assert.doesNotMatch(
     visibleCopy,
-    /independent evidence|independent observation|independentSourceCount|source independence|logic-distinct|source score|1,024 entries|1,024 probes|观察任务|\bintervals?\b|90% scenario|source confidence|evidence confidence/i,
+    /independent evidence|independent observation|independentSourceCount|source independence|logic-distinct|source score|signed artifacts|signed event|Evidence readiness 62%|Target for committee|1,024 entries|1,024 probes|观察任务|\bintervals?\b|90% scenario|source confidence|evidence confidence/i,
   );
   await assert.rejects(
     access(new URL("../app/_sites-preview", import.meta.url)),

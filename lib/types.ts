@@ -57,6 +57,8 @@ export interface EvidenceArtifact {
   hash: string;
   agent: string;
   tool: string;
+  sampleSize: number;
+  methodology: string;
   summary: string;
 }
 

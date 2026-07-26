@@ -74,13 +74,13 @@ export function DecisionActions() {
             investment committee.
           </p>
         </div>
-        <div className="posture-meter" aria-label="Evidence readiness 62%">
-          <span>Evidence readiness</span>
-          <strong>62%</strong>
-          <div>
-            <i style={{ width: "62%" }} />
-          </div>
-          <small>Target for committee: 85%</small>
+        <div
+          className="posture-meter"
+          aria-label="Committee readiness: primary records outstanding"
+        >
+          <span>Committee readiness</span>
+          <strong>Not ready</strong>
+          <small>Primary records outstanding</small>
         </div>
       </section>
 

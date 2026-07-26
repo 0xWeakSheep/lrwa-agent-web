@@ -245,6 +245,14 @@ export function FindingsWorkspace() {
                   <dd className="mono-value">{selectedEvidence.tool}</dd>
                 </div>
                 <div>
+                  <dt>Planned quota</dt>
+                  <dd>{selectedEvidence.sampleSize.toLocaleString("en-US")}</dd>
+                </div>
+                <div>
+                  <dt>Method</dt>
+                  <dd>{selectedEvidence.methodology}</dd>
+                </div>
+                <div>
                   <dt>Linked claim</dt>
                   <dd className="mono-value">{selectedEvidence.claimId}</dd>
                 </div>
