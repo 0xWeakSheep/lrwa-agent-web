@@ -13,7 +13,7 @@ export default function FindingsPage() {
     <WorkspaceShell
       activeStep="findings"
       title="A conclusion you can inspect and challenge."
-      description="LRWA does not output a static research memo. Each finding remains linked to its claims, evidence families, uncertainty and replayable alternatives."
+      description="LRWA does not output a static research memo. Each finding remains linked to its claims, evidence categories, uncertainty and replayable alternatives."
     >
       <FindingsWorkspace />
     </WorkspaceShell>

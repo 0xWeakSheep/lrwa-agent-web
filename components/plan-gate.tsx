@@ -18,7 +18,7 @@ export function PlanGate() {
   const [launchState, setLaunchState] = useState<LaunchState>("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
-  async function approveAndRun() {
+  async function startMission() {
     setLaunchState("launching");
     setErrorMessage("");
 
@@ -46,8 +46,8 @@ export function PlanGate() {
           <Locked size={20} aria-hidden />
         </span>
         <div>
-          <p className="mono-label">HUMAN APPROVAL GATE</p>
-          <h2 id="approval-title">Authorize this bounded mission</h2>
+          <p className="mono-label">DEMO INTERACTION GATE</p>
+          <h2 id="approval-title">Start this bounded synthetic mission</h2>
         </div>
       </div>
 
@@ -95,16 +95,17 @@ export function PlanGate() {
         className="approve-button"
         disabled={launchState === "launching"}
         kind="primary"
-        onClick={approveAndRun}
+        onClick={startMission}
         renderIcon={launchState === "launching" ? Play : ArrowRight}
       >
         {launchState === "launching"
-          ? "Authorizing mission..."
-          : "Approve and run mission"}
+          ? "Starting mission..."
+          : "Start synthetic mission"}
       </Button>
       <p className="approval-note">
-        If the API is unavailable, LRWA switches to the same deterministic
-        local simulation and marks the runtime mode.
+        This unauthenticated demo interaction is not a production approval
+        control. If the API is unavailable, LRWA switches to the same
+        deterministic local simulation and marks the runtime mode.
       </p>
     </aside>
   );

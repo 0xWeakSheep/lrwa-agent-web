@@ -14,7 +14,7 @@ import { WorkspaceShell } from "@/components/workspace-shell";
 export const metadata: Metadata = {
   title: "Mission plan",
   description:
-    "Review and authorize a bounded synthetic diligence mission for Morrow Coffee.",
+    "Review and start a bounded synthetic diligence mission for Morrow Coffee.",
 };
 
 const channels = [
@@ -75,7 +75,7 @@ export default function MissionPlanPage() {
     <WorkspaceShell
       activeStep="plan"
       title="Review the mission before agents act."
-      description="The supervisor has translated the investment memo into testable claims and a bounded evidence plan. No probe runs until a human approves it."
+      description="The supervisor has translated the investment memo into testable claims and a bounded evidence plan. A separate demo interaction starts the synthetic mission."
     >
       <div className="plan-layout">
         <div className="plan-main">

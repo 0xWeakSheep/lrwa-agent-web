@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     siteName: "LRWA",
     images: [
       {
-        url: "/lrwa-cinematic-hero.png",
+        url: "/lrwa-cinematic-hero.webp",
         width: 1672,
         height: 941,
         alt: "LRWA verification network illuminating a city at night",
@@ -53,7 +53,7 @@ export const metadata: Metadata = {
     title: "LRWA | Live Real-World Assurance",
     description:
       "Test the world behind the spreadsheet with governed verification agents.",
-    images: ["/lrwa-cinematic-hero.png"],
+    images: ["/lrwa-cinematic-hero.webp"],
   },
 };
 
@@ -72,6 +72,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} cds--g100`}
       >
+        <a className="skip-link" href="#main-content">
+          Skip to main content
+        </a>
         {children}
       </body>
     </html>

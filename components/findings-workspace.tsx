@@ -298,7 +298,7 @@ export function FindingsWorkspace() {
               <strong>Locked</strong>
             </div>
             <Button kind="primary" onClick={runReplay} renderIcon={Renew}>
-              Approve deterministic replay
+              Run deterministic replay
             </Button>
           </div>
         )}

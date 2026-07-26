@@ -40,7 +40,9 @@ test("server-renders the LRWA landing page and disclosure", async () => {
   assert.match(html, /Run the demo/);
   assert.match(html, /Fictional case/);
   assert.match(html, /evidence categories/);
-  assert.match(html, /lrwa-cinematic-hero\.png/);
+  assert.match(html, /lrwa-cinematic-hero\.webp/);
+  assert.match(html, /brand-symbol/);
+  assert.match(html, /lrwa-evidence-table\.webp/);
   assert.doesNotMatch(html, /Compile the claim|Observe within declared boundaries/);
   assert.doesNotMatch(html, /Your site is taking shape|react-loading-skeleton/);
 });
@@ -50,7 +52,7 @@ test("server-renders the complete case workflow", async () => {
     [
       "/cases/morrow-coffee",
       /Review the mission before agents act/,
-      /Approve and run mission/,
+      /Start synthetic mission/,
     ],
     [
       "/cases/morrow-coffee/live",
@@ -107,5 +109,7 @@ test("removes starter assets and prohibited separator glyphs", async () => {
   await assert.rejects(
     access(new URL("../app/_sites-preview", import.meta.url)),
   );
+  await access(new URL("../app/icon.svg", import.meta.url));
+  await access(new URL("../public/lrwa-mark.svg", import.meta.url));
   await access(new URL("README.md", projectRoot));
 });

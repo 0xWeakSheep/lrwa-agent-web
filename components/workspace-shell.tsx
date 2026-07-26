@@ -51,7 +51,7 @@ export function WorkspaceShell({
   const activeIndex = steps.findIndex((step) => step.id === activeStep);
 
   return (
-    <main className="workspace">
+    <main className="workspace" id="main-content">
       <header className="workspace-header">
         <Brand />
         <div className="workspace-case-title">
