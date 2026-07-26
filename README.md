@@ -16,8 +16,8 @@ evidence, uncertainty and a deterministic replay.
 ## Public demo and reviewer materials
 
 - Product demo: https://lrwa-agent-web.cheeky-angel-7701.chatgpt.site
-- 90-second film: https://raw.githubusercontent.com/0xWeakSheep/lrwa-agent-web/main/public/materials/LRWA_OpenArena_Demo_90s.mp4
-- Seed deck: https://raw.githubusercontent.com/0xWeakSheep/lrwa-agent-web/main/public/materials/LRWA_Seed_Deck.pdf
+- 90-second film: https://cdn.jsdelivr.net/gh/0xWeakSheep/lrwa-agent-web@11a13d001444f047ff3582870b2f3f6adb6f6c60/public/materials/LRWA_OpenArena_Demo_90s_web.mp4
+- Seed deck: https://cdn.jsdelivr.net/gh/0xWeakSheep/lrwa-agent-web@11a13d001444f047ff3582870b2f3f6adb6f6c60/public/materials/LRWA_Seed_Deck.pdf
 - Agent backend: https://github.com/0xWeakSheep/lrwa-agent
 
 ## Demo flow
