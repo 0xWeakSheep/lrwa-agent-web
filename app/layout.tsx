@@ -30,8 +30,13 @@ export const metadata: Metadata = {
     "evidence verification",
   ],
   icons: {
-    icon: "/favicon.svg",
-    shortcut: "/favicon.svg",
+    icon: [
+      {
+        url: "/icon.svg?v=lrwa-mark-20260727",
+        type: "image/svg+xml",
+      },
+    ],
+    shortcut: "/favicon.svg?v=lrwa-mark-20260727",
   },
   openGraph: {
     title: "LRWA | Live Real-World Assurance",
