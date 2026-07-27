@@ -25,7 +25,26 @@ async function render(pathname = "/", options = {}) {
     }),
     {
       ASSETS: {
-        fetch: async () => new Response("Not found", { status: 404 }),
+        fetch: async (request) => {
+          const requestUrl =
+            request instanceof Request
+              ? new URL(request.url)
+              : new URL(String(request), "http://localhost");
+
+          if (requestUrl.pathname === "/lrwa-mark.svg") {
+            const logo = await readFile(
+              new URL("../public/lrwa-mark.svg", import.meta.url),
+            );
+            return new Response(logo, {
+              headers: {
+                "content-type": "image/svg+xml",
+              },
+              status: 200,
+            });
+          }
+
+          return new Response("Not found", { status: 404 });
+        },
       },
     },
     {
@@ -85,6 +104,228 @@ test("server-renders Chinese when the locale cookie explicitly requests it", asy
   assert.match(html, /方法预览 \/ 尚未执行/);
   assert.match(html, /0 次真实外联/);
   assert.match(html, /将界面语言切换为英文/);
+});
+
+test("surfaces the bilingual company documents from the landing page", async () => {
+  const englishHtml = await renderedHtml("/");
+
+  assert.match(englishHtml, /site-docs-link/);
+  assert.match(englishHtml, /href="\/docs"/);
+  assert.match(englishHtml, /The business case\. The operating thesis\./);
+  assert.match(englishHtml, /Why LRWA, why now/);
+  assert.match(englishHtml, /How the evidence system works/);
+  assert.match(englishHtml, /href="\/docs\/business-plan"/);
+  assert.match(englishHtml, /href="\/docs\/whitepaper"/);
+
+  const chineseHtml = await renderedHtml("/", { locale: "zh" });
+
+  assert.match(chineseHtml, /site-docs-link/);
+  assert.match(chineseHtml, />文档<\/a>/);
+  assert.match(chineseHtml, /商业逻辑，以及方法论。/);
+  assert.match(chineseHtml, /为什么是 LRWA，为什么是现在/);
+  assert.match(chineseHtml, /证据行动系统如何运作/);
+  assert.match(chineseHtml, /href="\/docs\/business-plan"/);
+  assert.match(chineseHtml, /href="\/docs\/whitepaper"/);
+});
+
+test("server-renders the bilingual document index and both long-form documents", async () => {
+  const englishIndex = await renderedHtml("/docs");
+
+  assert.match(
+    englishIndex,
+    /<title>Company documents \| LRWA<\/title>/i,
+  );
+  assert.match(englishIndex, /docs-index-grid/);
+  assert.match(englishIndex, /Understand what we are building\./);
+  assert.match(englishIndex, /Business plan/);
+  assert.match(englishIndex, /Product whitepaper/);
+  assert.match(englishIndex, /href="\/docs\/business-plan"/);
+  assert.match(englishIndex, /href="\/docs\/whitepaper"/);
+  assert.match(
+    englishIndex,
+    /contacts no external party and its demonstration data cannot support a real commercial decision/,
+  );
+
+  const chineseIndex = await renderedHtml("/docs", { locale: "zh" });
+
+  assert.match(chineseIndex, /<title>项目文档 \| LRWA<\/title>/i);
+  assert.match(chineseIndex, /docs-index-grid/);
+  assert.match(chineseIndex, /理解我们正在构建什么。/);
+  assert.match(chineseIndex, /商业计划书/);
+  assert.match(chineseIndex, /产品白皮书/);
+  assert.match(
+    chineseIndex,
+    /不会真实联系任何外部对象，演示数据也不能作为真实商业判断/,
+  );
+
+  const englishBusinessPlan = await renderedHtml("/docs/business-plan");
+
+  assert.match(
+    englishBusinessPlan,
+    /<title>Business plan \| LRWA<\/title>/i,
+  );
+  assert.match(
+    englishBusinessPlan,
+    /class="docs-root docs-root--business-plan"/,
+  );
+  assert.match(englishBusinessPlan, /class="docs-document"/);
+  assert.match(englishBusinessPlan, /class="docs-opening-case"/);
+  assert.match(englishBusinessPlan, /LRWA business plan/);
+  assert.match(
+    englishBusinessPlan,
+    /Commercial truth is expensive because much of it lives outside the spreadsheet/,
+  );
+  assert.match(englishBusinessPlan, /11,260 hours of store-traffic video/);
+  assert.match(englishBusinessPlan, /25,843 customer receipts/);
+  assert.match(englishBusinessPlan, /What each funding stage must prove/);
+  assert.match(englishBusinessPlan, /Seed round/);
+  assert.match(englishBusinessPlan, /Series A/);
+  assert.match(englishBusinessPlan, /Series B/);
+  assert.match(
+    englishBusinessPlan,
+    /The expected result before Series A is evidence that at least one narrow use case can be delivered repeatedly/,
+  );
+  assert.match(
+    englishBusinessPlan,
+    /A task role is a controlled way to ask a question, not permission to invent a person/,
+  );
+  assert.match(englishBusinessPlan, /aria-current="page"/);
+  assert.match(englishBusinessPlan, /Current status/);
+  assert.match(englishBusinessPlan, /docs-document-resources/);
+  assert.match(
+    englishBusinessPlan,
+    /href="\/materials\/LRWA_Seed_Deck\.pdf"/,
+  );
+  assert.match(
+    englishBusinessPlan,
+    /href="\/materials\/LRWA_Seed_Deck\.pptx"/,
+  );
+
+  const chineseBusinessPlan = await renderedHtml("/docs/business-plan", {
+    locale: "zh",
+  });
+
+  assert.match(
+    chineseBusinessPlan,
+    /<title>商业计划书 \| LRWA<\/title>/i,
+  );
+  assert.match(chineseBusinessPlan, /LRWA 商业计划书/);
+  assert.match(chineseBusinessPlan, /商业尽调真正贵的地方/);
+  assert.match(chineseBusinessPlan, /11,260 小时的客流录像/);
+  assert.match(chineseBusinessPlan, /25,843 张消费者小票/);
+  assert.match(chineseBusinessPlan, /种子轮、A 轮和 B 轮要证明什么/);
+  assert.match(
+    chineseBusinessPlan,
+    /进入 A 轮前，预期至少证明一种窄场景可以重复交付/,
+  );
+  assert.match(
+    chineseBusinessPlan,
+    /进入 B 轮前，预期看到真实任务中的复购或续订意愿/,
+  );
+  assert.match(chineseBusinessPlan, /美团等本地商业平台的数据/);
+  assert.match(chineseBusinessPlan, /当前状态/);
+  assert.match(chineseBusinessPlan, /商业计划 PDF/);
+  assert.match(chineseBusinessPlan, /商业计划 PPTX/);
+
+  const englishWhitepaper = await renderedHtml("/docs/whitepaper");
+
+  assert.match(
+    englishWhitepaper,
+    /<title>Product whitepaper \| LRWA<\/title>/i,
+  );
+  assert.match(
+    englishWhitepaper,
+    /Evidence operations for commercial investigation/,
+  );
+  assert.match(
+    englishWhitepaper,
+    /class="docs-root docs-root--whitepaper"/,
+  );
+  assert.match(englishWhitepaper, /Evidence begins outside the model/);
+  assert.match(englishWhitepaper, /11,260 hours of traffic video/);
+  assert.match(englishWhitepaper, /Roles and multi-round inquiry/);
+  assert.match(
+    englishWhitepaper,
+    /An observation enters the evidence ledger only after the required provenance checks/,
+  );
+  assert.match(englishWhitepaper, /Authorization and human control/);
+  assert.match(englishWhitepaper, /What exists today/);
+
+  const chineseWhitepaper = await renderedHtml("/docs/whitepaper", {
+    locale: "zh",
+  });
+
+  assert.match(chineseWhitepaper, /<title>产品白皮书 \| LRWA<\/title>/i);
+  assert.match(chineseWhitepaper, /商业调查中的证据工作系统/);
+  assert.match(chineseWhitepaper, /证据必须来自模型之外/);
+  assert.match(chineseWhitepaper, /11,260 小时客流录像/);
+  assert.match(chineseWhitepaper, /任务角色与多轮询问/);
+  assert.match(
+    chineseWhitepaper,
+    /外部观察只有完成来源检查后才能进入证据账本/,
+  );
+  assert.match(chineseWhitepaper, /授权与人工控制/);
+  assert.match(chineseWhitepaper, /今天已经有什么/);
+});
+
+test("keeps distinct generated artwork behind the business plan and whitepaper", async () => {
+  await Promise.all([
+    access(new URL("../public/lrwa-doc-business-plan.webp", import.meta.url)),
+    access(new URL("../public/lrwa-doc-whitepaper.webp", import.meta.url)),
+  ]);
+
+  const styles = await readFile(
+    new URL("../app/globals.css", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(
+    styles,
+    /\.docs-root--business-plan \.docs-backdrop[\s\S]*?lrwa-doc-business-plan\.webp/,
+  );
+  assert.match(
+    styles,
+    /\.docs-root--whitepaper \.docs-backdrop[\s\S]*?lrwa-doc-whitepaper\.webp/,
+  );
+});
+
+test("keeps the downloadable business-plan files intact", async () => {
+  const [pdf, pptx] = await Promise.all([
+    readFile(
+      new URL("../public/materials/LRWA_Seed_Deck.pdf", import.meta.url),
+    ),
+    readFile(
+      new URL("../public/materials/LRWA_Seed_Deck.pptx", import.meta.url),
+    ),
+  ]);
+
+  assert.equal(pdf.subarray(0, 4).toString("ascii"), "%PDF");
+  assert.equal(pptx.subarray(0, 4).toString("hex"), "504b0304");
+  assert.ok(pdf.byteLength > 100_000);
+  assert.ok(pptx.byteLength > 100_000);
+});
+
+test("serves the shareable logo URL as the supplied raw SVG mark", async () => {
+  const response = await render("/logo");
+
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("content-type") ?? "", /^image\/svg\+xml\b/i);
+  assert.match(
+    response.headers.get("content-disposition") ?? "",
+    /inline;\s*filename="lrwa-logo\.svg"/i,
+  );
+
+  const svg = await response.text();
+  const suppliedSvg = await readFile(
+    new URL("../public/lrwa-mark.svg", import.meta.url),
+    "utf8",
+  );
+  assert.match(svg, /<svg\b/i);
+  assert.match(svg, /M50 12L70 76\.72L30 76\.72Z/);
+  assert.match(svg, /M88 32L15 70V42Z/);
+  assert.match(suppliedSvg, /M50 12L70 76\.72L30 76\.72Z/);
+  assert.match(suppliedSvg, /M88 32L15 70V42Z/);
+  assert.doesNotMatch(svg, /<!doctype html|site-header|brand-wordmark/i);
 });
 
 test("keeps the locale cookie strict and defaults invalid values to English", async () => {

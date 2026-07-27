@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight } from "@carbon/icons-react";
+import { ArrowRight, ArrowUpRight } from "@carbon/icons-react";
 import { LandingRoleStage } from "@/components/landing-role-stage";
 import { Brand, SiteHeader } from "@/components/site-header";
 import { useI18n } from "@/components/locale-provider";
@@ -19,6 +19,7 @@ const homeCopy = {
       "Agents take on customer, supplier, and competitor roles to find evidence public data cannot.",
     simulate: "Run the field simulation",
     build: "Build an investigation",
+    docs: "Docs",
     zeroActions: "0 NETWORK ACTIONS",
     loading: "STAGING FIELDWORK",
     received: "CLAIM RECEIVED",
@@ -26,6 +27,17 @@ const homeCopy = {
     probesReady: "PROBES READY",
     gateLocked: "EVIDENCE GATE LOCKED",
     differenceTitle: "Not another report agent.",
+    docsTitle: "The business case. The operating thesis.",
+    docsBody:
+      "Read the investor case, then inspect how role-based agents turn unanswered claims into traceable evidence.",
+    businessPlanLabel: "BUSINESS PLAN",
+    businessPlanTitle: "Why LRWA, why now",
+    businessPlanBody:
+      "Problem, customer, business model, go-to-market, defensibility, and current product state.",
+    whitepaperLabel: "WHITE PAPER",
+    whitepaperTitle: "How the evidence system works",
+    whitepaperBody:
+      "Investigation architecture, role orchestration, evidence controls, and operating limits.",
     passiveLabel: "MOST AGENTS",
     passiveTitle: "DATA / SUMMARY / REPORT",
     activeLabel: "LRWA",
@@ -60,6 +72,7 @@ const homeCopy = {
       "Agent 扮演真实客户、供应商与竞品调研者，展开多轮交互，获取公开数据里没有的一手证据。",
     simulate: "运行调查模拟",
     build: "建立调查",
+    docs: "文档",
     zeroActions: "0 次真实外联",
     loading: "正在编排调查任务",
     received: "主张已接收",
@@ -67,6 +80,17 @@ const homeCopy = {
     probesReady: "追问已准备",
     gateLocked: "证据门槛已锁定",
     differenceTitle: "它不是另一个研报 Agent。",
+    docsTitle: "商业逻辑，以及方法论。",
+    docsBody:
+      "先看投资人关心的商业路径，再看多角色 Agent 如何把未决主张转成可追溯证据。",
+    businessPlanLabel: "商业 BP",
+    businessPlanTitle: "为什么是 LRWA，为什么是现在",
+    businessPlanBody:
+      "问题、客户、商业模式、市场路径、护城河，以及当前可体验的产品形态。",
+    whitepaperLabel: "白皮书",
+    whitepaperTitle: "证据行动系统如何运作",
+    whitepaperBody:
+      "调查架构、角色编排、证据控制，以及产品明确不做什么。",
     passiveLabel: "大多数 AGENT",
     passiveTitle: "数据 / 总结 / 报告",
     activeLabel: "LRWA",
@@ -214,6 +238,51 @@ function EvidenceDifference({
   );
 }
 
+function DocsPortal({
+  copy,
+}: {
+  copy: (typeof homeCopy)[keyof typeof homeCopy];
+}) {
+  return (
+    <section className="home-docs-portal" aria-labelledby="home-docs-title">
+      <div className="home-docs-mark" aria-hidden>
+        <Image alt="" height={520} src="/lrwa-mark.svg" width={520} />
+      </div>
+      <div className="home-docs-copy" data-home-reveal="heading">
+        <h2 className="editorial-heading" id="home-docs-title">
+          {copy.docsTitle}
+        </h2>
+        <p>{copy.docsBody}</p>
+        <Link className="home-docs-index-link" href="/docs">
+          {copy.docs}
+          <ArrowRight size={18} aria-hidden />
+        </Link>
+      </div>
+
+      <div className="home-docs-routes" data-home-reveal="panel">
+        <Link
+          className="home-docs-route home-docs-route-primary"
+          href="/docs/business-plan"
+        >
+          <span>{copy.businessPlanLabel}</span>
+          <h3>{copy.businessPlanTitle}</h3>
+          <p>{copy.businessPlanBody}</p>
+          <ArrowUpRight size={24} aria-hidden />
+        </Link>
+        <Link
+          className="home-docs-route home-docs-route-secondary"
+          href="/docs/whitepaper"
+        >
+          <span>{copy.whitepaperLabel}</span>
+          <h3>{copy.whitepaperTitle}</h3>
+          <p>{copy.whitepaperBody}</p>
+          <ArrowUpRight size={24} aria-hidden />
+        </Link>
+      </div>
+    </section>
+  );
+}
+
 export function HomeExperience() {
   const { locale } = useI18n();
   const copy = homeCopy[locale];
@@ -269,8 +338,9 @@ export function HomeExperience() {
                 {copy.simulate}
                 <ArrowRight size={20} aria-hidden />
               </Link>
-              <Link className="cinematic-secondary" href="/investigations">
-                {copy.build}
+              <Link className="cinematic-secondary" href="/docs">
+                {copy.docs}
+                <ArrowRight size={20} aria-hidden />
               </Link>
             </div>
           </div>
@@ -278,6 +348,8 @@ export function HomeExperience() {
       </section>
 
       <EvidenceDifference copy={copy} />
+
+      <DocsPortal copy={copy} />
 
       <section
         className="cinematic-method"
