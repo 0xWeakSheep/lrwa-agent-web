@@ -13,7 +13,10 @@ export function Brand() {
           <path d="M88 32L15 70V42Z" />
         </svg>
       </span>
-      <span>LRWA</span>
+      <span className="brand-wordmark">
+        <strong>LRWA</strong>
+        <small>EVIDENCE OPS</small>
+      </span>
     </Link>
   );
 }

@@ -15,11 +15,39 @@ import {
 } from "@carbon/icons-react";
 import { AgentMissionControl } from "@/components/agent-mission-control";
 import { useI18n } from "@/components/locale-provider";
+import {
+  LrwaSignal,
+  type SignalVariant,
+} from "@/components/lrwa-signal";
 import { localizeScenario } from "@/lib/simulation-copy";
 import exampleResult from "@/lib/simulation-example-result.json";
 import scenario from "@/lib/simulation-scenario.json";
 
 const lastPhaseIndex = scenario.phases.length - 1;
+const phaseEventCodes: Record<string, string> = {
+  input: "input.loaded",
+  decompose: "claim.decomposed",
+  personas: "personas.staged",
+  inquiries: "inquiries.presented",
+  branches: "branches.modeled",
+  gate: "gate.locked",
+};
+const personaSignalVariants: SignalVariant[] = [
+  "buyer",
+  "supplier",
+  "competitor",
+  "skeptic",
+];
+
+function phaseSignalVariant(phaseId: string): SignalVariant {
+  return phaseId in phaseEventCodes
+    ? (phaseId as SignalVariant)
+    : "input";
+}
+
+function personaSignalVariant(wave: number): SignalVariant {
+  return personaSignalVariants[wave - 1] ?? "buyer";
+}
 
 function PublicInputStage() {
   const { choose, locale } = useI18n();
@@ -148,9 +176,15 @@ function PersonaCohortStage() {
 
       <div className="simulation-persona-grid">
         {localizedScenario.personas.map((persona) => (
-          <article key={persona.id}>
+          <article data-wave={persona.wave} key={persona.id}>
             <header>
-              <span>{persona.id}</span>
+              <div>
+                <LrwaSignal
+                  size={28}
+                  variant={personaSignalVariant(persona.wave)}
+                />
+                <span>{persona.id}</span>
+              </div>
               <small>{choose("SYNTHETIC PERSONA", "合成人物")}</small>
             </header>
             <strong>{persona.cohort}</strong>
@@ -270,7 +304,12 @@ function EvidenceGateStage() {
           <dl>
             <div>
               <dt>{choose("Example decision", "示例判断")}</dt>
-              <dd>{choose("Conditionally executable", "有条件可执行")}</dd>
+              <dd>
+                {choose(
+                  "Jing An Kerry Centre Store",
+                  "静安嘉里中心店",
+                )}
+              </dd>
             </div>
             <div>
               <dt>{choose("Real evidence", "真实证据")}</dt>
@@ -286,13 +325,35 @@ function EvidenceGateStage() {
         <section className="simulation-gate-decision">
           <div>
             <p>EXAMPLE DECISION / NOT OBSERVED</p>
-            <h3>{choose("Conditionally executable.", "示例判断：有条件可执行。")}</h3>
+            <h3>
+              {choose(
+                "Recommend Jing An Kerry Centre Store.",
+                "演示建议：选择“静安嘉里中心店”。",
+              )}
+            </h3>
             <span>
               {choose(
-                "Fictional Candidate A is the conditional first choice inside this specimen. Candidate B is a fallback. Neither label maps to either named real store.",
-                "仅在这份样张内部，虚构候选 A 是有条件首选，候选 B 是备选；两个标签均未映射到任何一家真实门店。",
+                "The demonstration assumes this store can prepare 20 drinks before 09:00 after prior-business-day confirmation. The 1F Store is not recommended because its morning hours and bulk-order capacity remain unconfirmed. No store was contacted.",
+                "演示假设该店在前一工作日确认后，可以在上午 9 点前备妥 20 杯。“静安嘉里中心 1F 店”的上午营业时段和批量接单能力尚未确认，因此暂不选择。系统没有联系任何门店。",
               )}
             </span>
+            <div className="simulation-gate-lockline">
+              <Locked size={17} aria-hidden />
+              <div>
+                <strong>
+                  {choose(
+                    "The real finding has not been produced.",
+                    "真实结论尚未产生。",
+                  )}
+                </strong>
+                <small>
+                  {choose(
+                    "Authorized outreach and original receipts are still required.",
+                    "仍需授权外联与原始回执。",
+                  )}
+                </small>
+              </div>
+            </div>
           </div>
           <div className="simulation-gate-facts">
             {exampleResult.facts.map((fact) => (
@@ -303,32 +364,6 @@ function EvidenceGateStage() {
               </article>
             ))}
           </div>
-        </section>
-
-        <section className="simulation-gate-actions">
-          <Locked size={28} aria-hidden />
-          <div>
-            <p>REAL-WORLD GATE · STILL LOCKED</p>
-            <h3>
-              {choose(
-                "The real finding has not been produced.",
-                "真实结论尚未产生。",
-              )}
-            </h3>
-            <span>
-              {choose(
-                "Publishing a real result requires authorized outreach, original replies, source identity, timestamps, conflict checks, and human review. Depending on scope and response speed, that work can take days to months.",
-                "要发布真实结论，仍需经过授权外联、取得原始回复、核验来源身份与时间戳、处理冲突并完成人工复核。根据范围和响应速度，通常需要数天至数月。",
-              )}
-            </span>
-          </div>
-          <Link
-            className="cinematic-primary"
-            href="/investigations/simulation/report"
-          >
-            {choose("Open complete report", "查看完整报告")}
-            <ArrowRight size={20} aria-hidden />
-          </Link>
         </section>
       </div>
     </div>
@@ -516,22 +551,153 @@ export function SimulationLab({ initialPhaseId }: { initialPhaseId?: string }) {
       data-real-replies={scenario.metrics.realReplies}
       data-real-sends={scenario.metrics.realSends}
     >
-      <section
-        className="simulation-disclosure"
-        aria-label={choose("Simulation lab boundary", "模拟实验边界")}
-      >
-        <div>
-          <DataConnected size={19} aria-hidden />
-          <span>SANDBOX ONLY</span>
-        </div>
-        <p>
-          {choose(
-            `Sandbox simulation · ${scenario.metrics.simulatedPersonas} synthetic personas · no external connection · nothing sent`,
-            `沙盒模拟 · ${scenario.metrics.simulatedPersonas} 个合成人物 · 未连接外部平台 · 未真实发送`,
-          )}
-        </p>
-        <strong>0 REAL ACTIONS</strong>
-      </section>
+      <div className="simulation-floating-homebar">
+        <section
+          className="simulation-disclosure"
+          aria-label={choose("Simulation lab boundary", "模拟实验边界")}
+        >
+          <div>
+            <DataConnected size={19} aria-hidden />
+            <span>SANDBOX ONLY</span>
+          </div>
+          <p>
+            {choose(
+              `Sandbox simulation · ${scenario.metrics.simulatedPersonas} synthetic personas · no external connection · nothing sent`,
+              `沙盒模拟 · ${scenario.metrics.simulatedPersonas} 个合成人物 · 未连接外部平台 · 未真实发送`,
+            )}
+          </p>
+          <strong>0 REAL ACTIONS</strong>
+        </section>
+
+        <section
+          className="simulation-playback"
+          aria-label={choose("Simulation playback controls", "模拟回放控制")}
+        >
+          <div className="runtime-state">
+            <span
+              className={`runtime-pulse${isPlaying ? "" : " paused"}`}
+              aria-hidden
+            />
+            <div aria-atomic="true" aria-live="polite">
+              <strong>
+                STEP {activePhase.code} /{" "}
+                {String(scenario.phases.length).padStart(2, "0")} ·{" "}
+                {activePhase.label}
+              </strong>
+              <small>
+                {isPlaying
+                  ? choose("Replaying the local experiment", "正在回放本地实验")
+                  : choose("Waiting for user control", "等待用户控制")}
+              </small>
+            </div>
+          </div>
+
+          <nav
+            className="simulation-stage-track"
+            aria-label={choose("Simulation lab steps", "模拟实验步骤")}
+          >
+            {localizedScenario.phases.map((phase, index) => (
+              <button
+                aria-current={index === activePhaseIndex ? "step" : undefined}
+                aria-label={`${phase.code} · ${phase.label}`}
+                className={
+                  index === activePhaseIndex
+                    ? "active"
+                    : index < activePhaseIndex
+                      ? "viewed"
+                      : ""
+                }
+                key={phase.id}
+                onClick={() => selectPhase(index)}
+                title={phase.label}
+                type="button"
+              >
+                <span>{phase.code}</span>
+                <div>
+                  <strong>{phase.label}</strong>
+                  <small>{phase.protocol}</small>
+                </div>
+              </button>
+            ))}
+          </nav>
+
+          <div className="simulation-controls">
+            <button
+              aria-label={choose("Previous step", "上一步")}
+              className="simulation-compact-control"
+              disabled={
+                activePhaseIndex === 0 &&
+                (!isInquiryPhase || revealedInquiryCount === 1)
+              }
+              onClick={retreat}
+              title={choose("Previous step", "上一步")}
+              type="button"
+            >
+              <ChevronLeft size={17} aria-hidden />
+              <span>{choose("Previous", "上一步")}</span>
+            </button>
+            <button
+              aria-pressed={isPlaying}
+              className="simulation-play-button"
+              onClick={togglePlayback}
+              type="button"
+            >
+              {isPlaying ? (
+                <Pause size={17} aria-hidden />
+              ) : (
+                <Play size={17} aria-hidden />
+              )}
+              <span>
+                {isPlaying
+                  ? choose("Pause", "暂停")
+                  : choose("Play full walkthrough", "播放全过程")}
+              </span>
+            </button>
+            <button
+              aria-label={
+                hasMoreInquiries
+                  ? choose("Next inquiry", "下一个询问")
+                  : choose("Next step", "下一步")
+              }
+              className="simulation-compact-control"
+              disabled={activePhaseIndex === lastPhaseIndex}
+              onClick={advance}
+              title={
+                hasMoreInquiries
+                  ? choose("Next inquiry", "下一个询问")
+                  : choose("Next step", "下一步")
+              }
+              type="button"
+            >
+              <span>
+                {hasMoreInquiries
+                  ? choose("Next inquiry", "下一个询问")
+                  : choose("Next step", "下一步")}
+              </span>
+              <ChevronRight size={17} aria-hidden />
+            </button>
+            <Link
+              aria-label={choose("Agent field", "Agent 全景")}
+              className="simulation-agent-field-link simulation-compact-control"
+              href="/investigations/simulation?start=inquiries"
+              title={choose("Agent field", "Agent 全景")}
+            >
+              <Flow size={17} aria-hidden />
+              <span>{choose("Agent field", "Agent 全景")}</span>
+            </Link>
+            <button
+              aria-label={choose("Reset simulation", "重置模拟")}
+              className="simulation-compact-control"
+              onClick={resetPlayback}
+              title={choose("Reset simulation", "重置模拟")}
+              type="button"
+            >
+              <Reset size={17} aria-hidden />
+              <span>{choose("Reset", "重置")}</span>
+            </button>
+          </div>
+        </section>
+      </div>
 
       <section className="brief-truth-bar simulation-truth-bar">
         <div>
@@ -552,119 +718,25 @@ export function SimulationLab({ initialPhaseId }: { initialPhaseId?: string }) {
         </div>
       </section>
 
-      <section
-        className="simulation-playback"
-        aria-label={choose("Simulation playback controls", "模拟回放控制")}
-      >
-        <div className="runtime-state">
-          <span
-            className={`runtime-pulse${isPlaying ? "" : " paused"}`}
-            aria-hidden
-          />
-          <div aria-atomic="true" aria-live="polite">
-            <strong>
-              STEP {activePhase.code} /{" "}
-              {String(scenario.phases.length).padStart(2, "0")} ·{" "}
-              {activePhase.label}
-            </strong>
-            <small>
-              {isPlaying
-                ? choose("Replaying the local experiment", "正在回放本地实验")
-                : choose("Waiting for user control", "等待用户控制")}
-            </small>
-          </div>
-        </div>
-
-        <div className="simulation-controls">
-          <button
-            disabled={
-              activePhaseIndex === 0 &&
-              (!isInquiryPhase || revealedInquiryCount === 1)
-            }
-            onClick={retreat}
-            type="button"
-          >
-            <ChevronLeft size={17} aria-hidden />
-            {choose("Previous", "上一步")}
-          </button>
-          <button
-            aria-pressed={isPlaying}
-            className="simulation-play-button"
-            onClick={togglePlayback}
-            type="button"
-          >
-            {isPlaying ? (
-              <Pause size={17} aria-hidden />
-            ) : (
-              <Play size={17} aria-hidden />
-            )}
-            {isPlaying
-              ? choose("Pause", "暂停")
-              : choose("Play full walkthrough", "播放全过程")}
-          </button>
-          <button
-            disabled={activePhaseIndex === lastPhaseIndex}
-            onClick={advance}
-            type="button"
-          >
-            {hasMoreInquiries
-              ? choose("Next inquiry", "下一个询问")
-              : choose("Next step", "下一步")}
-            <ChevronRight size={17} aria-hidden />
-          </button>
-          <Link
-            className="simulation-agent-field-link"
-            href="/investigations/simulation?start=inquiries"
-          >
-            <Flow size={17} aria-hidden />
-            {choose("Agent field", "Agent 全景")}
-          </Link>
-          <button onClick={resetPlayback} type="button">
-            <Reset size={17} aria-hidden />
-            {choose("Reset", "重置")}
-          </button>
-        </div>
-      </section>
-
-      <nav
-        className="simulation-stage-track"
-        aria-label={choose("Simulation lab steps", "模拟实验步骤")}
-      >
-        {localizedScenario.phases.map((phase, index) => (
-          <button
-            aria-current={index === activePhaseIndex ? "step" : undefined}
-            className={
-              index === activePhaseIndex
-                ? "active"
-                : index < activePhaseIndex
-                  ? "viewed"
-                  : ""
-            }
-            key={phase.id}
-            onClick={() => selectPhase(index)}
-            type="button"
-          >
-            <span>{phase.code}</span>
-            <div>
-              <strong>{phase.label}</strong>
-              <small>{phase.protocol}</small>
-            </div>
-          </button>
-        ))}
-      </nav>
-
       <div
         className={`simulation-layout${isInquiryPhase ? " agent-field-layout" : ""}`}
       >
         <section
+          aria-label={activePhase.label}
           className={`simulation-frame${isInquiryPhase ? " agent-field-frame" : ""}`}
           id="simulation-frame"
-          aria-labelledby="simulation-frame-title"
         >
           <header>
-            <div>
-              <p>{activePhase.protocol}</p>
-              <h2 id="simulation-frame-title">{activePhase.label}</h2>
+            <div className="simulation-frame-identity">
+              <LrwaSignal
+                label={activePhase.label}
+                size={34}
+                variant={phaseSignalVariant(activePhase.id)}
+              />
+              <div>
+                <p>{activePhase.protocol}</p>
+                <h2 id="simulation-frame-title">{activePhase.label}</h2>
+              </div>
             </div>
             <span>{activePhase.description}</span>
           </header>
@@ -702,9 +774,15 @@ export function SimulationLab({ initialPhaseId }: { initialPhaseId?: string }) {
 
         {!isInquiryPhase && (
           <aside className="simulation-ledger">
-            <header>
-              <p>LOCAL EVENT TRACE</p>
-              <h2>{choose("Process monitor", "过程监视器")}</h2>
+            <header className="simulation-ledger-head">
+              <div>
+                <p>LRWA EVENT CONSOLE</p>
+                <h2>lrwa://sandbox/replay</h2>
+              </div>
+              <div className="simulation-ledger-flags">
+                <span>{choose("NETWORK OFF", "网络关闭")}</span>
+                <span>{choose("LEDGER WRITE 0", "账本写入 0")}</span>
+              </div>
             </header>
             <ol>
               {localizedScenario.phases.map((phase, index) => {
@@ -713,10 +791,14 @@ export function SimulationLab({ initialPhaseId }: { initialPhaseId?: string }) {
                 return (
                   <li
                     className={isCurrent ? "current" : isViewed ? "viewed" : ""}
+                    data-channel="LOCAL"
                     key={phase.id}
                   >
-                    <span>{phase.code}</span>
+                    <span>SEQ.{phase.code}</span>
                     <div>
+                      <small>
+                        LOCAL / {phaseEventCodes[phase.id] ?? "event.pending"}
+                      </small>
                       <strong>{phase.label}</strong>
                       <p>
                         {isCurrent
@@ -734,6 +816,9 @@ export function SimulationLab({ initialPhaseId }: { initialPhaseId?: string }) {
                             : choose("Not viewed yet", "尚未查看")}
                       </p>
                     </div>
+                    {isCurrent && (
+                      <i className="simulation-terminal-cursor" aria-hidden />
+                    )}
                   </li>
                 );
               })}

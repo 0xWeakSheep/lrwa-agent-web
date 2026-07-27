@@ -249,14 +249,16 @@ test("renders a complete prefabricated result without unlocking the real finding
 
   assert.match(englishHtml, /ILLUSTRATIVE RESULT/);
   assert.match(englishHtml, /PREBUILT DEMO/);
-  assert.match(englishHtml, /Conditionally executable/);
   assert.match(englishHtml, /Days to months/);
   assert.match(englishHtml, /The real finding has not been produced/);
+  assert.match(englishHtml, /Recommend Jing An Kerry Centre Store\./);
   assert.match(
     englishHtml,
-    /Fictional Candidate A is the conditional first choice/,
+    /The 1F Store is not recommended because its morning hours and bulk-order capacity remain unconfirmed/,
   );
-  assert.match(englishHtml, /Open complete report/);
+  assert.match(englishHtml, /No store was contacted/);
+  assert.match(englishHtml, /Open the complete report/);
+  assert.match(englishHtml, /Open report/);
   assert.match(englishHtml, /href="\/investigations\/simulation\/report"/);
   assert.match(englishHtml, /data-artifact-kind="illustrative_result"/);
   assert.match(englishHtml, /data-generated-by-live-run="false"/);
@@ -269,11 +271,16 @@ test("renders a complete prefabricated result without unlocking the real finding
   );
 
   assert.match(chineseHtml, /预制演示/);
-  assert.match(chineseHtml, /示例判断：有条件可执行/);
   assert.match(chineseHtml, /数天至数月/);
   assert.match(chineseHtml, /真实结论尚未产生/);
-  assert.match(chineseHtml, /虚构候选 A 是有条件首选/);
-  assert.match(chineseHtml, /查看完整报告/);
+  assert.match(chineseHtml, /演示建议：选择“静安嘉里中心店”。/);
+  assert.match(
+    chineseHtml,
+    /“静安嘉里中心 1F 店”的上午营业时段和批量接单能力尚未确认，因此暂不选择/,
+  );
+  assert.match(chineseHtml, /系统没有联系任何门店/);
+  assert.match(chineseHtml, /打开完整报告/);
+  assert.match(chineseHtml, /查看报告/);
 
   for (const html of [englishHtml, chineseHtml]) {
     assert.match(html, /data-real-sends="0"/);
@@ -307,19 +314,53 @@ test("renders the complete illustrative report as its own truth-labelled page", 
   );
   assert.match(englishHtml, /Complete illustrative report\./);
   assert.match(englishHtml, /Illustrative diligence report/);
-  assert.match(englishHtml, /EXECUTIVE FINDING/);
+  assert.match(englishHtml, /Jing An Kerry Centre Store first\./);
+  assert.match(englishHtml, /Hold the 1F Store\./);
+  assert.match(
+    englishHtml,
+    /this prebuilt demonstration recommends Jing An Kerry Centre Store/,
+  );
+  assert.match(
+    englishHtml,
+    /It does not recommend Jing An Kerry Centre 1F Store because the sample has no confirmation of its morning hours or bulk-order capacity/,
+  );
+  assert.match(
+    englishHtml,
+    /obtain one written reply that names the store, confirms all 20 drinks will be ready before 09:00, identifies the pickup point, and states the payment and invoice terms/,
+  );
+  assert.match(
+    englishHtml,
+    /This is a demonstration only\. No store was contacted/,
+  );
+  assert.match(
+    englishHtml,
+    /the recommendation shows how a completed report should communicate a decision/,
+  );
+  assert.match(
+    englishHtml,
+    /Why the demonstration chooses Jing An Kerry Centre Store/,
+  );
+  assert.match(englishHtml, /Why we would not place the order yet/);
+  assert.match(englishHtml, /href="#report-analysis"/);
   assert.match(englishHtml, /CLAIM RESOLUTION/);
   assert.match(englishHtml, /EVIDENCE MATRIX/);
   assert.match(englishHtml, /INVESTIGATION DESIGN/);
   assert.match(englishHtml, /SOURCE REGISTER/);
   assert.match(englishHtml, /RESPONSE LOGIC/);
   assert.match(englishHtml, /href="#report-logic"/);
+  assert.match(englishHtml, /LIMITATIONS \/ ALTERNATIVES \/ EXECUTION/);
+  assert.match(englishHtml, /href="#report-limits"/);
+  assert.match(englishHtml, /What may still be different in reality/);
+  assert.match(englishHtml, /How we would check this for real/);
+  assert.match(englishHtml, /R-05/);
+  assert.match(englishHtml, /Have a person approve the final answer/);
   assert.match(englishHtml, /HYPOTHETICAL INPUT REGISTER/);
-  assert.match(englishHtml, /Candidate labels/);
+  assert.match(englishHtml, /Demonstration mapping/);
   assert.match(
     englishHtml,
-    /Neither label is mapped to either named real store/,
+    /Jing An Kerry Centre Store is the recommended route and Jing An Kerry Centre 1F Store is the unconfirmed alternative/,
   );
+  assert.doesNotMatch(englishHtml, /Candidate labels|Candidate A|Candidate B/);
   assert.match(
     englishHtml,
     /Model inputs only\. Not evidence, replies, or observations/,
@@ -339,16 +380,42 @@ test("renders the complete illustrative report as its own truth-labelled page", 
 
   assert.match(chineseHtml, /<title>完整调查报告样张 \| LRWA<\/title>/i);
   assert.match(chineseHtml, /完整调查报告样张/);
+  assert.match(chineseHtml, /静安嘉里中心店优先。/);
+  assert.match(chineseHtml, /1F 店暂不选择。/);
+  assert.match(
+    chineseHtml,
+    /这份预制演示建议优先选择“静安嘉里中心店”/,
+  );
+  assert.match(
+    chineseHtml,
+    /“静安嘉里中心 1F 店”暂不选择，因为样例里没有确认它的上午营业时段，也没有确认它能否承接 20 杯批量订单/,
+  );
+  assert.match(
+    chineseHtml,
+    /下单前仍要取得一份书面回复，把具体门店、20 杯数量、上午 9 点前备妥、取货位置、付款方式和发票条件一次写清楚/,
+  );
+  assert.match(chineseHtml, /这是预制演示，系统没有联系任何门店/);
+  assert.match(chineseHtml, /不代表两家门店的真实情况/);
+  assert.match(chineseHtml, /为什么演示里选择“静安嘉里中心店”/);
+  assert.match(chineseHtml, /为什么现在还不能下单/);
+  assert.match(chineseHtml, /href="#report-analysis"/);
   assert.match(chineseHtml, /逐项事实判断/);
   assert.match(chineseHtml, /证据矩阵/);
   assert.match(chineseHtml, /调查方法/);
   assert.match(chineseHtml, /来源登记/);
   assert.match(chineseHtml, /响应逻辑/);
+  assert.match(chineseHtml, /哪些情况会改变答案，以及怎样查清楚/);
+  assert.match(chineseHtml, /href="#report-limits"/);
+  assert.match(chineseHtml, /现实情况可能与样例不同/);
+  assert.match(chineseHtml, /真正执行时，我们会这样查/);
+  assert.match(chineseHtml, /R-05/);
+  assert.match(chineseHtml, /由人工确认最终结论/);
   assert.match(chineseHtml, /假设输入登记/);
   assert.match(
     chineseHtml,
-    /均未映射到页面中提及的任何一家真实门店/,
+    /“静安嘉里中心店”是推荐门店，“静安嘉里中心 1F 店”是尚未确认的备选/,
   );
+  assert.doesNotMatch(chineseHtml, /候选标签|候选 A|候选 B/);
   assert.match(chineseHtml, /询问覆盖明细/);
   assert.match(chineseHtml, /0 条真实证据/);
   assert.match(chineseHtml, /未采集/);

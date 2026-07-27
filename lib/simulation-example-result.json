@@ -8,12 +8,12 @@
     {
       "id": "H-01",
       "label": {
-        "en": "Candidate labels",
-        "zh": "候选标签"
+        "en": "Demonstration mapping",
+        "zh": "演示门店设定"
       },
       "detail": {
-        "en": "Candidate A and Candidate B are fictional routing labels used only by this specimen. Neither label is mapped to either named real store.",
-        "zh": "候选 A 与候选 B 只是这份样张使用的虚构路径标签，均未映射到页面中提及的任何一家真实门店。"
+        "en": "For this prebuilt demonstration, Jing An Kerry Centre Store is the recommended route and Jing An Kerry Centre 1F Store is the unconfirmed alternative. This is not a real observation.",
+        "zh": "在这份预制演示中，“静安嘉里中心店”是推荐门店，“静安嘉里中心 1F 店”是尚未确认的备选。这不是真实调查结论。"
       }
     },
     {
@@ -34,8 +34,8 @@
         "zh": "营业前提"
       },
       "detail": {
-        "en": "The specimen assumes fictional Candidate A covers the target weekday morning while Candidate B remains unresolved.",
-        "zh": "样张假设虚构候选 A 覆盖目标工作日上午，候选 B 的时段仍待核验。"
+        "en": "The demonstration assumes Jing An Kerry Centre Store covers the target weekday morning. The 1F Store's hours remain unconfirmed.",
+        "zh": "演示假设“静安嘉里中心店”覆盖目标工作日上午；“静安嘉里中心 1F 店”的营业时段仍未确认。"
       }
     },
     {
@@ -45,8 +45,8 @@
         "zh": "产能前提"
       },
       "detail": {
-        "en": "The specimen assumes fictional Candidate A can fulfill 20 drinks before 09:00 after prior-business-day confirmation.",
-        "zh": "样张假设虚构候选 A 在前一工作日完成确认后，可在上午 09:00 前完成 20 杯饮品。"
+        "en": "The demonstration assumes Jing An Kerry Centre Store can prepare 20 drinks before 09:00 after confirmation on the previous business day.",
+        "zh": "演示假设“静安嘉里中心店”在前一工作日完成确认后，可以在上午 09:00 前备妥 20 杯饮品。"
       }
     }
   ],
@@ -77,8 +77,8 @@
         "zh": "示例：部分支持"
       },
       "detail": {
-        "en": "The specimen assumes fictional Candidate A covers the target weekday morning. Candidate B remains unresolved.",
-        "zh": "结果样张假设虚构候选 A 覆盖目标工作日上午；候选 B 仍待复核。"
+        "en": "The demonstration assumes Jing An Kerry Centre Store covers the target weekday morning. The 1F Store remains unconfirmed.",
+        "zh": "演示假设“静安嘉里中心店”覆盖目标工作日上午；“静安嘉里中心 1F 店”仍待确认。"
       }
     },
     {
@@ -92,8 +92,8 @@
         "zh": "示例：有条件"
       },
       "detail": {
-        "en": "The specimen assumes fictional Candidate A can fulfill 20 drinks before 09:00 when confirmed on the preceding business day.",
-        "zh": "结果样张假设虚构候选 A 在前一工作日完成确认后，可在上午 09:00 前完成 20 杯饮品。"
+        "en": "The demonstration assumes Jing An Kerry Centre Store can prepare 20 drinks before 09:00 when confirmed on the previous business day.",
+        "zh": "演示假设“静安嘉里中心店”在前一工作日完成确认后，可以在上午 09:00 前备妥 20 杯饮品。"
       }
     },
     {
@@ -116,12 +116,12 @@
     {
       "code": "01",
       "label": {
-        "en": "Candidate route",
-        "zh": "候选路径"
+        "en": "Recommended store",
+        "zh": "推荐门店"
       },
       "detail": {
-        "en": "Use fictional Candidate A as the conditional first choice inside this specimen only.",
-        "zh": "仅在这份虚构样张内部，将候选 A 作为有条件首选。"
+        "en": "Use Jing An Kerry Centre Store as the first choice in this demonstration.",
+        "zh": "在这份演示中，优先选择“静安嘉里中心店”。"
       }
     },
     {
@@ -138,12 +138,12 @@
     {
       "code": "03",
       "label": {
-        "en": "Fallback",
-        "zh": "备选方案"
+        "en": "1F Store decision",
+        "zh": "1F 店判断"
       },
       "detail": {
-        "en": "If confirmation is missing or conflicts, split the order or move to another verified provider.",
-        "zh": "如果确认缺失或相互冲突，则拆分订单，或转向另一个已经核验的供应方。"
+        "en": "Do not use Jing An Kerry Centre 1F Store unless its morning hours and 20-drink capacity are confirmed.",
+        "zh": "在确认上午营业时段和 20 杯接单能力之前，不选择“静安嘉里中心 1F 店”。"
       }
     },
     {

@@ -1,7 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { useI18n } from "@/components/locale-provider";
+import { LrwaSignal } from "@/components/lrwa-signal";
 import { roleBlueprints, type RoleId } from "@/lib/investigation";
 
 const englishRoles: Record<
@@ -131,6 +133,7 @@ export function LandingRoleStage() {
               tabIndex={isActive ? 0 : -1}
               type="button"
             >
+              <LrwaSignal size={30} variant={role.id} />
               <span>
                 <small>{role.code}</small>
                 <strong>{roleName}</strong>
@@ -143,28 +146,82 @@ export function LandingRoleStage() {
       <article
         aria-labelledby={`role-tab-${selected.id}`}
         className="role-stage-panel"
+        data-role={selected.id}
         id={`role-panel-${selected.id}`}
         key={selected.id}
         role="tabpanel"
       >
-        <div className="role-stage-panel-head">
-          <p>
-            {locale === "en"
-              ? "METHOD PREVIEW / NOT EXECUTED"
-              : "方法预览 / 尚未执行"}
-          </p>
+        <div className="role-stage-visual" aria-hidden>
+          <Image
+            alt=""
+            className="role-stage-visual-image"
+            fill
+            sizes="(max-width: 720px) 100vw, 620px"
+            src="/lrwa-role-dossiers-v2.webp"
+            unoptimized
+          />
+          <div className="role-stage-visual-shade" />
+          <div className="role-stage-visual-mark">
+            <LrwaSignal size={54} variant={selected.id} />
+          </div>
+          <span className="role-stage-coordinate">
+            {selected.code} / LOCAL DOSSIER
+          </span>
         </div>
-        <h3>{selectedCopy.perspective}</h3>
-        <dl className="role-stage-brief">
-          <div>
-            <dt>{locale === "en" ? "PROBE" : "追问"}</dt>
-            <dd>{selectedCopy.probe}</dd>
+
+        <div className="role-stage-console">
+          <div className="role-stage-panel-head">
+            <p>
+              {locale === "en"
+                ? "METHOD PREVIEW / NOT EXECUTED"
+                : "方法预览 / 尚未执行"}
+            </p>
+            <div>
+              <span>lrwa://local/{selected.id}</span>
+              <strong>{locale === "en" ? "NETWORK OFF" : "网络关闭"}</strong>
+            </div>
           </div>
-          <div>
-            <dt>{locale === "en" ? "PROOF" : "留证"}</dt>
-            <dd>{selectedCopy.proof}</dd>
-          </div>
-        </dl>
+          <h3>{selectedCopy.perspective}</h3>
+          <dl className="role-stage-brief">
+            <div>
+              <dt>{locale === "en" ? "PROBE" : "追问"}</dt>
+              <dd>{selectedCopy.probe}</dd>
+            </div>
+            <div>
+              <dt>{locale === "en" ? "PROOF" : "留证"}</dt>
+              <dd>{selectedCopy.proof}</dd>
+            </div>
+          </dl>
+          <ol
+            className="role-stage-trace"
+            aria-label={
+              locale === "en"
+                ? "Local method preview events"
+                : "本地方法预览事件"
+            }
+          >
+            <li>
+              <span>01 / LOCAL</span>
+              <code>claim.received</code>
+              <small>{locale === "en" ? "preview only" : "仅供预览"}</small>
+            </li>
+            <li>
+              <span>02 / ROLE</span>
+              <code>mission.{selected.id}.staged</code>
+              <small>{selectedCopy.probe}</small>
+            </li>
+            <li className="current">
+              <span>03 / GATE</span>
+              <code>receipt.required</code>
+              <small>
+                {locale === "en"
+                  ? "0 sends · conclusion locked"
+                  : "0 次发送 · 结论锁定"}
+              </small>
+              <i aria-hidden />
+            </li>
+          </ol>
+        </div>
       </article>
     </div>
   );

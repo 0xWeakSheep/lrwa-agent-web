@@ -124,7 +124,9 @@ export function WorkspaceShell({
   }, [activeStep]);
 
   return (
-    <main className="workspace">
+    <main
+      className={`workspace${isSimulation ? " simulation-workspace" : ""}`}
+    >
       <header className="workspace-homebar">
         <div className="workspace-homebar-brand">
           <Brand />
