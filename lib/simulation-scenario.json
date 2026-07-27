@@ -1,0 +1,289 @@
+{
+  "version": 1,
+  "id": "starbucks-jingan-sandbox-v1",
+  "subject": "星巴克上海静安嘉里中心相关门店",
+  "claim": "核验星巴克中国公开页面中的“静安嘉里中心店”和“静安嘉里中心1F店”是否为两个独立且目前正常营业的门店，并确认其中哪家可以接受工作日上午9:00前、20杯标准咖啡的到店自取订单。以上是待验证命题，不是既定事实。",
+  "boundary": "这是内置方法实验。公开页面只提供调查线索；合成人物、问句和响应分支均在本地生成，未连接外部平台，也不构成对门店现状的判断。",
+  "metrics": {
+    "simulatedPersonas": 12,
+    "simulatedDrafts": 12,
+    "realSends": 0,
+    "realReplies": 0,
+    "realReceipts": 0,
+    "conclusionGate": "locked"
+  },
+  "sources": [
+    {
+      "id": "SRC-01",
+      "sourceKind": "public_reference",
+      "label": "星巴克中国公开门店页面",
+      "url": "https://www.starbucks.com.cn/help/legal/stores-that-do-not-sell-starbucks-gift-cards/",
+      "observedText": "页面提供“静安嘉里中心店”这一门店名称及公开地址、电话字段。",
+      "boundary": "公开页面线索，不等于当前营业证明。"
+    },
+    {
+      "id": "SRC-02",
+      "sourceKind": "public_reference",
+      "label": "星巴克中国臻选门店公开页面",
+      "url": "https://www.starbucks.com.cn/help/legal/2020-double-eleven-r-b-stores/",
+      "observedText": "页面提供“静安嘉里中心1F店”这一门店名称及公开地址、电话字段。",
+      "boundary": "公开页面线索，不等于当前营业证明。"
+    },
+    {
+      "id": "SRC-03",
+      "sourceKind": "public_reference",
+      "label": "上海静安嘉里中心官方网站",
+      "url": "https://www.jingankerrycentre.com/about",
+      "observedText": "用于确认静安嘉里中心项目与位置背景。",
+      "boundary": "场地背景来源，不证明具体门店营业状态。"
+    }
+  ],
+  "facts": [
+    {
+      "id": "F-01",
+      "label": "门店身份",
+      "question": "两个公开名称是否对应两个独立门店，而不是同一门店的不同写法？",
+      "status": "unverified"
+    },
+    {
+      "id": "F-02",
+      "label": "当前营业",
+      "question": "两个门店在目标工作日上午是否均正常营业？",
+      "status": "unverified"
+    },
+    {
+      "id": "F-03",
+      "label": "批量自取",
+      "question": "哪家门店能在上午9:00前完成20杯标准咖啡的到店自取？",
+      "status": "unverified"
+    },
+    {
+      "id": "F-04",
+      "label": "履约限制",
+      "question": "下单时间、付款方式、发票和临时缺货会怎样改变可履约性？",
+      "status": "unverified"
+    }
+  ],
+  "phases": [
+    {
+      "id": "input",
+      "code": "01",
+      "label": "真实输入",
+      "shortLabel": "输入",
+      "protocol": "PUBLIC INPUT",
+      "description": "读取真实公开页面，把可见字段当作待核验线索。"
+    },
+    {
+      "id": "decompose",
+      "code": "02",
+      "label": "命题拆解",
+      "shortLabel": "拆解",
+      "protocol": "CLAIM MAP",
+      "description": "把一个大问题拆成身份、营业、履约和限制四个事实缺口。"
+    },
+    {
+      "id": "personas",
+      "code": "03",
+      "label": "合成人物",
+      "shortLabel": "人物",
+      "protocol": "PERSONA COHORT",
+      "description": "生成不同情境的合成买家，不创建账号，也不使用真实个人身份。"
+    },
+    {
+      "id": "inquiries",
+      "code": "04",
+      "label": "询问波次",
+      "shortLabel": "询问",
+      "protocol": "DRAFT FAN-OUT",
+      "description": "让每个合成人物形成不同问法，展示批量询问如何覆盖同一主张。"
+    },
+    {
+      "id": "branches",
+      "code": "05",
+      "label": "响应分支",
+      "shortLabel": "分支",
+      "protocol": "HYPOTHESIS TREE",
+      "description": "预演可能出现的回答类型，并为每种类型生成下一轮追问。"
+    },
+    {
+      "id": "gate",
+      "code": "06",
+      "label": "证据门槛",
+      "shortLabel": "门槛",
+      "protocol": "EVIDENCE GATE",
+      "description": "只有真实回执才能解锁判断；本实验始终保持结论锁定。"
+    }
+  ],
+  "personas": [
+    {
+      "id": "P-01",
+      "synthetic": true,
+      "cohort": "早班通勤",
+      "context": "工作日 08:10，附近办公",
+      "variable": "最早自取时间",
+      "wave": 1,
+      "inquiryDraft": "想在明早8:45前自取20杯美式，应该联系静安嘉里中心的哪一家门店？最晚需要几点确认？",
+      "networkAction": false,
+      "deliveryStatus": "not_sent"
+    },
+    {
+      "id": "P-02",
+      "synthetic": true,
+      "cohort": "行政助理",
+      "context": "工作日 08:30，公司晨会",
+      "variable": "批量订单能力",
+      "wave": 1,
+      "inquiryDraft": "公司晨会需要20杯标准咖啡，上午9点前到店自取。两家静安嘉里中心门店哪家能接单？",
+      "networkAction": false,
+      "deliveryStatus": "not_sent"
+    },
+    {
+      "id": "P-03",
+      "synthetic": true,
+      "cohort": "活动执行",
+      "context": "临时活动，时间不可延后",
+      "variable": "履约承诺",
+      "wave": 1,
+      "inquiryDraft": "如果提前一天下单，20杯咖啡能否保证在8:50前备好？需要到哪一个入口取？",
+      "networkAction": false,
+      "deliveryStatus": "not_sent"
+    },
+    {
+      "id": "P-04",
+      "synthetic": true,
+      "cohort": "财务采购",
+      "context": "企业付款，需要凭证",
+      "variable": "付款与发票",
+      "wave": 2,
+      "inquiryDraft": "20杯到店自取是否支持企业付款和发票？下单时需要联系门店还是通过小程序？",
+      "networkAction": false,
+      "deliveryStatus": "not_sent"
+    },
+    {
+      "id": "P-05",
+      "synthetic": true,
+      "cohort": "访客接待",
+      "context": "不熟悉商场动线",
+      "variable": "门店地址区分",
+      "wave": 2,
+      "inquiryDraft": "公开页面里的“静安嘉里中心店”和“静安嘉里中心1F店”是两个不同门店吗？分别在什么位置？",
+      "networkAction": false,
+      "deliveryStatus": "not_sent"
+    },
+    {
+      "id": "P-06",
+      "synthetic": true,
+      "cohort": "酒店礼宾",
+      "context": "代客确认，要求准确位置",
+      "variable": "门店身份",
+      "wave": 2,
+      "inquiryDraft": "客人要去静安嘉里中心的星巴克，两个公开名称是否都还在营业？应如何区分？",
+      "networkAction": false,
+      "deliveryStatus": "not_sent"
+    },
+    {
+      "id": "P-07",
+      "synthetic": true,
+      "cohort": "会议组织",
+      "context": "多人饮品，品类混合",
+      "variable": "菜单组合",
+      "wave": 3,
+      "inquiryDraft": "20杯订单可以混合美式、拿铁和无咖啡因饮品吗？会影响上午9点前自取吗？",
+      "networkAction": false,
+      "deliveryStatus": "not_sent"
+    },
+    {
+      "id": "P-08",
+      "synthetic": true,
+      "cohort": "骑行取货",
+      "context": "短暂停留，不进入办公楼",
+      "variable": "取货动线",
+      "wave": 3,
+      "inquiryDraft": "骑车到店自取20杯，哪一家门店的入口更方便？能否安排集中打包并说明取货点？",
+      "networkAction": false,
+      "deliveryStatus": "not_sent"
+    },
+    {
+      "id": "P-09",
+      "synthetic": true,
+      "cohort": "饮食偏好",
+      "context": "多人乳制品替换",
+      "variable": "定制产能",
+      "wave": 3,
+      "inquiryDraft": "20杯里有多杯需要更换燕麦奶，门店能否在8:45前一起备好？需要提前多久提交明细？",
+      "networkAction": false,
+      "deliveryStatus": "not_sent"
+    },
+    {
+      "id": "P-10",
+      "synthetic": true,
+      "cohort": "应急采购",
+      "context": "当天临时决定",
+      "variable": "临时接单",
+      "wave": 4,
+      "inquiryDraft": "如果当天早上7点后才确认，20杯标准咖啡还有机会在9点前自取吗？哪家门店更合适？",
+      "networkAction": false,
+      "deliveryStatus": "not_sent"
+    },
+    {
+      "id": "P-11",
+      "synthetic": true,
+      "cohort": "外宾协助",
+      "context": "需要英文订单信息",
+      "variable": "沟通与订单确认",
+      "wave": 4,
+      "inquiryDraft": "能否提供一份包含门店准确名称、地址和取货时间的订单确认，方便转给外籍同事？",
+      "networkAction": false,
+      "deliveryStatus": "not_sent"
+    },
+    {
+      "id": "P-12",
+      "synthetic": true,
+      "cohort": "长期订购",
+      "context": "评估每周固定需求",
+      "variable": "稳定履约",
+      "wave": 4,
+      "inquiryDraft": "如果以后每周固定需要20杯，哪家静安嘉里中心门店可以稳定承接上午自取？需要怎样预约？",
+      "networkAction": false,
+      "deliveryStatus": "not_sent"
+    }
+  ],
+  "responseBranches": [
+    {
+      "id": "B-01",
+      "synthetic": true,
+      "networkAction": false,
+      "label": "明确区分两个门店",
+      "condition": "如果授权渠道明确给出两个独立门店及不同位置",
+      "nextProbe": "追问各自营业时间、门店编号和批量订单归属。",
+      "evidenceNeeded": "带来源、时间戳和门店标识的真实回执"
+    },
+    {
+      "id": "B-02",
+      "synthetic": true,
+      "networkAction": false,
+      "label": "只给出模板说明",
+      "condition": "如果只建议查看小程序或联系门店，没有回答身份差异",
+      "nextProbe": "要求确认两个公开名称是否指向同一经营单元。",
+      "evidenceNeeded": "能对应具体门店的真实客服或门店回执"
+    },
+    {
+      "id": "B-03",
+      "synthetic": true,
+      "networkAction": false,
+      "label": "可接单但时间不确定",
+      "condition": "如果表示可以接受20杯订单，但未承诺上午9点前完成",
+      "nextProbe": "把饮品明细、最晚下单时间和取货时间逐项确认。",
+      "evidenceNeeded": "包含数量、时间窗口和门店主体的真实确认"
+    },
+    {
+      "id": "B-04",
+      "synthetic": true,
+      "networkAction": false,
+      "label": "信息相互冲突",
+      "condition": "如果不同入口对门店状态或接单能力给出不一致信息",
+      "nextProbe": "升级到门店直接确认，并保留全部冲突回执。",
+      "evidenceNeeded": "至少两个独立来源的原始回执"
+    }
+  ]
+}

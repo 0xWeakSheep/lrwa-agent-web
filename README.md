@@ -82,6 +82,27 @@ NEXT_PUBLIC_LRWA_API_URL=http://localhost:3001/v1
 `NEXT_PUBLIC_LRWA_API_URL` is only a public service address. DeepSeek and
 connector credentials stay in the backend.
 
+## Deploy the frontend to Vercel
+
+The repository keeps `npm run build` for the Vinext/Cloudflare target.
+`vercel.json` overrides Vercel with the native Next.js build:
+
+```bash
+npm run build:vercel
+```
+
+Use the `Next.js` framework preset and leave **Output Directory** empty so
+Vercel uses the framework default `.next` output. Configure the public backend
+address at build time:
+
+```dotenv
+NEXT_PUBLIC_LRWA_API_URL=https://lrwa-api.43-130-230-4.sslip.io/v1
+```
+
+Do not place DeepSeek or connector credentials in Vercel or any
+`NEXT_PUBLIC_*` variable. Changing the public API address requires a new
+deployment because Next.js embeds it in the browser bundle during the build.
+
 ## DeepSeek planning boundary
 
 DeepSeek is opt-in in the claim form. When enabled, the subject, claim and

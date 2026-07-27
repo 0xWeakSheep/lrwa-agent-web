@@ -1,15 +1,10 @@
 export type RoleId = "buyer" | "supplier" | "competitor" | "skeptic";
 
 export type MissionStatus =
-  | "planned"
-  | "prepared"
-  | "contacted"
-  | "evidence_received";
+  "planned" | "prepared" | "contacted" | "evidence_received";
 
 export type InvestigationMode =
-  | "assisted_live"
-  | "authorized_connector"
-  | "simulation_lab";
+  "assisted_live" | "authorized_connector" | "simulation_lab";
 
 export type EvidenceStance = "supports" | "contradicts" | "context";
 
@@ -20,10 +15,7 @@ export type RuntimeConnection =
   | "server_sync_unknown";
 
 export type PlanningMode =
-  | "LIVE"
-  | "DETERMINISTIC_FALLBACK"
-  | "NOT_REQUESTED"
-  | "LOCAL_ONLY";
+  "LIVE" | "DETERMINISTIC_FALLBACK" | "NOT_REQUESTED" | "LOCAL_ONLY";
 
 export interface RoleBlueprint {
   id: RoleId;
@@ -123,8 +115,7 @@ export const roleBlueprints: RoleBlueprint[] = [
     objective: "寻找经营规模与供应链能力之间能否相互解释。",
     opening:
       "我们正在评估潜在供货合作，想了解当前覆盖区域、补货频率、交付批次和验收流程。",
-    followUp:
-      "把模糊的规模表述落到频率、区域、最小批次和异常处理方式。",
+    followUp: "把模糊的规模表述落到频率、区域、最小批次和异常处理方式。",
     receipt: "授权沟通记录、公开合作条款或客户提供的供应资料",
     boundary: "涉及合作身份时必须由真实企业主体发起。",
   },
@@ -134,10 +125,8 @@ export const roleBlueprints: RoleBlueprint[] = [
     name: "同类样本",
     perspective: "用同一口径比较公开门店、价格与履约",
     objective: "建立可重复的同类样本，避免只看目标公司的自述。",
-    opening:
-      "按同一时间窗口和同一地理范围记录目标与同类品牌的公开可见信息。",
-    followUp:
-      "对缺失或冲突字段保留未知状态，不用行业均值自动补齐。",
+    opening: "按同一时间窗口和同一地理范围记录目标与同类品牌的公开可见信息。",
+    followUp: "对缺失或冲突字段保留未知状态，不用行业均值自动补齐。",
     receipt: "公开页面快照、检索条件、采集时间与字段口径",
     boundary: "只使用允许访问的公开页面或正式数据接口。",
   },
@@ -149,8 +138,7 @@ export const roleBlueprints: RoleBlueprint[] = [
     objective: "让每个差异都对应一个可被证伪的替代假设。",
     opening:
       "哪些未覆盖渠道、季节因素或会计口径，可能让现有证据低估或误解这项主张？",
-    followUp:
-      "把每个替代解释转成下一条证据请求，而不是直接写进结论。",
+    followUp: "把每个替代解释转成下一条证据请求，而不是直接写进结论。",
     receipt: "替代假设、所需原始凭证和可改变决策的阈值",
     boundary: "不把缺失证据当作负面证据。",
   },
@@ -235,6 +223,25 @@ export function loadInvestigationRecord(): InvestigationRecord | null {
       return null;
     }
     const record = parsed as InvestigationRecord;
+    const hasTruthBearingSimulationState =
+      record.mode === "simulation_lab" &&
+      (record.evidence.length > 0 ||
+        record.missions.some(
+          (mission) =>
+            Boolean(mission.contactedAt) ||
+            Boolean(mission.contactChannel) ||
+            mission.status === "contacted" ||
+            mission.status === "evidence_received",
+        ) ||
+        (Array.isArray(record.events) &&
+          record.events.some(
+            (event) =>
+              event.type === "CONTACT_CONFIRMED" ||
+              event.type === "EVIDENCE_RECORDED",
+          )));
+    if (hasTruthBearingSimulationState) {
+      return null;
+    }
     const hasReceiptWithoutConfirmedContact = record.evidence.some(
       (evidence) =>
         !record.missions.find(
@@ -271,10 +278,7 @@ export function saveInvestigationRecord(
   record: InvestigationRecord,
 ): InvestigationRecord {
   const next = { ...record, updatedAt: new Date().toISOString() };
-  window.localStorage.setItem(
-    INVESTIGATION_STORAGE_KEY,
-    JSON.stringify(next),
-  );
+  window.localStorage.setItem(INVESTIGATION_STORAGE_KEY, JSON.stringify(next));
   window.dispatchEvent(new Event("lrwa-investigation-updated"));
   return next;
 }
