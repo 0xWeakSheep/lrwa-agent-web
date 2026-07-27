@@ -16,6 +16,7 @@ import {
 import { AgentMissionControl } from "@/components/agent-mission-control";
 import { useI18n } from "@/components/locale-provider";
 import { localizeScenario } from "@/lib/simulation-copy";
+import exampleResult from "@/lib/simulation-example-result.json";
 import scenario from "@/lib/simulation-scenario.json";
 
 const lastPhaseIndex = scenario.phases.length - 1;
@@ -242,42 +243,93 @@ function EvidenceGateStage() {
   const { choose } = useI18n();
 
   return (
-    <div className="simulation-stage-content">
-      <div className="simulation-gate">
-        <div className="simulation-gate-icon">
-          <Locked size={34} aria-hidden />
-        </div>
-        <p>EVIDENCE GATE · LOCKED</p>
-        <h2>
-          {choose(
-            "The walkthrough is complete. The factual finding is still empty.",
-            "演示走完了，事实判断仍然为空。",
-          )}
-        </h2>
-        <span>
-          {choose(
-            "Without real receipts, we cannot determine whether the stores are separate, whether they are operating, or which one can accept the order.",
-            "没有真实回执，不能判断两个门店是否独立、是否营业，也不能判断哪家能够承接订单。",
-          )}
-        </span>
-        <div className="simulation-gate-checks">
+    <div className="simulation-stage-content simulation-gate-stage">
+      <div
+        className="simulation-gate-summary"
+        data-artifact-kind={exampleResult.artifactKind}
+        data-generated-by-live-run={String(exampleResult.generatedByLiveRun)}
+        data-ledger-write={String(exampleResult.ledgerWrite)}
+        data-truth-bearing={String(exampleResult.truthBearing)}
+      >
+        <section className="simulation-gate-summary-head">
           <div>
-            <span>{choose("Real requests", "真实请求")}</span>
-            <strong>0</strong>
+            <span>ILLUSTRATIVE RESULT / PREBUILT DEMO</span>
+            <h2>
+              {choose(
+                "The walkthrough is complete. The report is ready.",
+                "流程已经走完，完整报告样张已生成。",
+              )}
+            </h2>
+            <p>
+              {choose(
+                "This is a prebuilt demonstration, not the result of this replay. No store, customer service channel, supplier, or external platform was contacted.",
+                "这是预制演示，不是本次回放真实跑出的结果。系统没有联系门店、客服、供应商或任何外部平台。",
+              )}
+            </p>
           </div>
+          <dl>
+            <div>
+              <dt>{choose("Example decision", "示例判断")}</dt>
+              <dd>{choose("Conditionally executable", "有条件可执行")}</dd>
+            </div>
+            <div>
+              <dt>{choose("Real evidence", "真实证据")}</dt>
+              <dd>0</dd>
+            </div>
+            <div>
+              <dt>{choose("Typical real run", "真实执行周期")}</dt>
+              <dd>{choose("Days to months", "数天至数月")}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section className="simulation-gate-decision">
           <div>
-            <span>{choose("Real replies", "真实回复")}</span>
-            <strong>0</strong>
+            <p>EXAMPLE DECISION / NOT OBSERVED</p>
+            <h3>{choose("Conditionally executable.", "示例判断：有条件可执行。")}</h3>
+            <span>
+              {choose(
+                "Store A is the conditional first choice in this fictional specimen. Store B remains a fallback pending verification. This says nothing about either real store.",
+                "在这份虚构样张中，门店 A 是有条件首选，门店 B 是待复核备选。这不代表任何真实门店的现实状态。",
+              )}
+            </span>
           </div>
+          <div className="simulation-gate-facts">
+            {exampleResult.facts.map((fact) => (
+              <article key={fact.id}>
+                <span>{fact.id}</span>
+                <strong>{choose(fact.label.en, fact.label.zh)}</strong>
+                <small>{choose(fact.status.en, fact.status.zh)}</small>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="simulation-gate-actions">
+          <Locked size={28} aria-hidden />
           <div>
-            <span>{choose("Real receipts", "真实回执")}</span>
-            <strong>0</strong>
+            <p>REAL-WORLD GATE · STILL LOCKED</p>
+            <h3>
+              {choose(
+                "The real finding has not been produced.",
+                "真实结论尚未产生。",
+              )}
+            </h3>
+            <span>
+              {choose(
+                "Publishing a real result requires authorized outreach, original replies, source identity, timestamps, conflict checks, and human review. Depending on scope and response speed, that work can take days to months.",
+                "要发布真实结论，仍需经过授权外联、取得原始回复、核验来源身份与时间戳、处理冲突并完成人工复核。根据范围和响应速度，通常需要数天至数月。",
+              )}
+            </span>
           </div>
-        </div>
-        <Link className="cinematic-primary" href="/investigations">
-          {choose("Build a real investigation", "建立真实调查")}
-          <ArrowRight size={20} aria-hidden />
-        </Link>
+          <Link
+            className="cinematic-primary"
+            href="/investigations/simulation/report"
+          >
+            {choose("Open complete report", "查看完整报告")}
+            <ArrowRight size={20} aria-hidden />
+          </Link>
+        </section>
       </div>
     </div>
   );
@@ -286,6 +338,17 @@ function EvidenceGateStage() {
 function phaseIndexForId(phaseId?: string) {
   const index = scenario.phases.findIndex((phase) => phase.id === phaseId);
   return index >= 0 ? index : 0;
+}
+
+function resetSimulationStageScroll() {
+  window.requestAnimationFrame(() => {
+    document
+      .querySelector<HTMLElement>("#simulation-frame .simulation-stage-content")
+      ?.scrollTo({ behavior: "smooth", top: 0 });
+    document
+      .querySelector<HTMLElement>("#simulation-frame .agent-command")
+      ?.scrollTo({ behavior: "smooth", top: 0 });
+  });
 }
 
 function SimulationStage({
@@ -359,11 +422,7 @@ export function SimulationLab({ initialPhaseId }: { initialPhaseId?: string }) {
 
         const nextPhaseIndex = Math.min(activePhaseIndex + 1, lastPhaseIndex);
         setActivePhaseIndex(nextPhaseIndex);
-        window.requestAnimationFrame(() => {
-          document
-            .getElementById("simulation-frame")
-            ?.scrollIntoView({ block: "start" });
-        });
+        resetSimulationStageScroll();
         if (nextPhaseIndex === lastPhaseIndex) {
           setIsPlaying(false);
         }
@@ -377,14 +436,7 @@ export function SimulationLab({ initialPhaseId }: { initialPhaseId?: string }) {
   function selectPhase(index: number) {
     setIsPlaying(false);
     setActivePhaseIndex(index);
-  }
-
-  function scrollToFrame() {
-    window.requestAnimationFrame(() => {
-      document
-        .getElementById("simulation-frame")
-        ?.scrollIntoView({ block: "start" });
-    });
+    resetSimulationStageScroll();
   }
 
   function showNextInquiry() {
@@ -408,11 +460,11 @@ export function SimulationLab({ initialPhaseId }: { initialPhaseId?: string }) {
     if (activePhaseIndex === lastPhaseIndex) {
       setActivePhaseIndex(initialPhaseIndex);
       setRevealedInquiryCount(1);
-      scrollToFrame();
+      resetSimulationStageScroll();
       return;
     }
     setActivePhaseIndex((current) => Math.min(current + 1, lastPhaseIndex));
-    scrollToFrame();
+    resetSimulationStageScroll();
   }
 
   function retreat() {
@@ -422,7 +474,7 @@ export function SimulationLab({ initialPhaseId }: { initialPhaseId?: string }) {
       return;
     }
     setActivePhaseIndex((current) => Math.max(current - 1, 0));
-    scrollToFrame();
+    resetSimulationStageScroll();
   }
 
   function togglePlayback() {
@@ -441,7 +493,7 @@ export function SimulationLab({ initialPhaseId }: { initialPhaseId?: string }) {
     setIsPlaying(false);
     setActivePhaseIndex(initialPhaseIndex);
     setRevealedInquiryCount(1);
-    scrollToFrame();
+    resetSimulationStageScroll();
   }
 
   return (
@@ -613,20 +665,25 @@ export function SimulationLab({ initialPhaseId }: { initialPhaseId?: string }) {
             <footer className="simulation-stage-navigation">
               <div>
                 <span>
-                  {activePhaseIndex === lastPhaseIndex ? "REPLAY" : "NEXT STEP"}
+                  {activePhaseIndex === lastPhaseIndex ? "REPORT" : "NEXT STEP"}
                 </span>
                 <strong>
                   {activePhaseIndex === lastPhaseIndex
-                    ? choose("Restart from the claim map", "从命题拆解重新开始")
+                    ? choose("Open the complete report", "打开完整报告")
                     : nextPhase?.label}
                 </strong>
               </div>
-              <button onClick={advance} type="button">
-                {activePhaseIndex === lastPhaseIndex
-                  ? choose("Replay", "从头再看")
-                  : choose("Next step", "下一步")}
-                <ArrowRight size={18} aria-hidden />
-              </button>
+              {activePhaseIndex === lastPhaseIndex ? (
+                <Link href="/investigations/simulation/report">
+                  {choose("Open report", "查看报告")}
+                  <ArrowRight size={18} aria-hidden />
+                </Link>
+              ) : (
+                <button onClick={advance} type="button">
+                  {choose("Next step", "下一步")}
+                  <ArrowRight size={18} aria-hidden />
+                </button>
+              )}
             </footer>
           )}
         </section>
@@ -651,7 +708,12 @@ export function SimulationLab({ initialPhaseId }: { initialPhaseId?: string }) {
                       <strong>{phase.label}</strong>
                       <p>
                         {isCurrent
-                          ? choose("Presenting locally", "正在本地呈现")
+                          ? activePhase.id === "gate"
+                            ? choose(
+                                "Presenting a prebuilt sample",
+                                "正在展示预制结果",
+                              )
+                            : choose("Presenting locally", "正在本地呈现")
                           : isViewed
                             ? choose(
                                 "Viewed in this replay",
@@ -684,10 +746,15 @@ export function SimulationLab({ initialPhaseId }: { initialPhaseId?: string }) {
             <div className="simulation-ledger-lock">
               <Locked size={18} aria-hidden />
               <span>
-                {choose(
-                  "The real conclusion remains locked",
-                  "真实结论持续锁定",
-                )}
+                {activePhase.id === "gate"
+                  ? choose(
+                      "Real finding locked · result panel is illustrative",
+                      "真实结论锁定 · 左侧仅为结果示例",
+                    )
+                  : choose(
+                      "The real conclusion remains locked",
+                      "真实结论持续锁定",
+                    )}
               </span>
             </div>
           </aside>

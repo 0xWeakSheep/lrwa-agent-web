@@ -49,6 +49,11 @@ test("server-renders the English field evidence landing page by default", async 
   assert.match(html, /<title>Field Evidence Operations \| LRWA<\/title>/i);
   assert.match(html, /Most agents analyze\./);
   assert.match(html, /LRWA investigates\./);
+  assert.match(html, /MULTI-STAGE AGENT FIELDWORK/);
+  assert.match(
+    html,
+    /customer, supplier, and competitor roles to find evidence public data cannot/,
+  );
   assert.match(html, /Run the field simulation/);
   assert.match(html, /Not another report agent\./);
   assert.match(html, /No receipt\. No conclusion\./);
@@ -73,6 +78,7 @@ test("server-renders Chinese when the locale cookie explicitly requests it", asy
   assert.match(html, /<title>主动证据调查 \| LRWA<\/title>/i);
   assert.match(html, /大多数 AI 只分析/);
   assert.match(html, /LRWA 会去调查/);
+  assert.match(html, /扮演真实客户、供应商与竞品调研者，展开多轮交互/);
   assert.match(html, /运行调查模拟/);
   assert.match(html, /它不是另一个研报 Agent/);
   assert.match(html, /没有回执，就没有结论/);
@@ -101,12 +107,17 @@ test("keeps the new fieldwork image and launch animation accessible", async () =
   );
   await access(new URL("../public/lrwa-evidence-table.webp", import.meta.url));
 
-  const [homeSource, styles] = await Promise.all([
+  const [homeSource, roleStageSource, styles, layoutSource] = await Promise.all([
     readFile(
       new URL("../components/home-experience.tsx", import.meta.url),
       "utf8",
     ),
+    readFile(
+      new URL("../components/landing-role-stage.tsx", import.meta.url),
+      "utf8",
+    ),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+    readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
   ]);
 
   assert.match(homeSource, /FieldworkLaunchSequence/);
@@ -123,9 +134,20 @@ test("keeps the new fieldwork image and launch animation accessible", async () =
   );
   assert.match(homeSource, /fieldwork-launch-panel panel-one/);
   assert.match(homeSource, /fieldwork-launch-manifest/);
+  assert.match(homeSource, /IntersectionObserver/);
+  assert.match(homeSource, /data-home-reveal/);
   assert.match(homeSource, /0 NETWORK ACTIONS/);
+  assert.doesNotMatch(homeSource, /<(?:Checkmark|Locked)\b/);
+  assert.doesNotMatch(roleStageSource, /from "@carbon\/icons-react"/);
+  assert.doesNotMatch(homeSource, /fieldwork-visual-status/);
+  assert.match(layoutSource, /Barlow_Condensed/);
+  assert.match(layoutSource, /--font-editorial/);
   assert.match(styles, /@keyframes fieldwork-launch-dismiss/);
   assert.match(styles, /@keyframes fieldwork-route-draw/);
+  assert.match(styles, /@keyframes home-title-enter/);
+  assert.match(styles, /@keyframes role-panel-ink-in/);
+  assert.doesNotMatch(styles, /editorial-heading::after/);
+  assert.doesNotMatch(styles, /hero-title-brand::after/);
   assert.match(styles, /\.section-backdrop-difference img/);
   assert.match(styles, /\.section-backdrop-method img/);
   assert.match(
@@ -218,6 +240,98 @@ test("server-renders the bilingual sandbox with explicit zero-action state", asy
     assert.match(html, /data-real-receipts="0"/);
     assert.doesNotMatch(html, /data-real-(?:sends|replies|receipts)="[1-9]/);
   }
+});
+
+test("renders a complete prefabricated result without unlocking the real finding", async () => {
+  const englishHtml = await renderedHtml(
+    "/investigations/simulation?start=gate",
+  );
+
+  assert.match(englishHtml, /ILLUSTRATIVE RESULT/);
+  assert.match(englishHtml, /PREBUILT DEMO/);
+  assert.match(englishHtml, /Conditionally executable/);
+  assert.match(englishHtml, /Days to months/);
+  assert.match(englishHtml, /The real finding has not been produced/);
+  assert.match(englishHtml, /Store A is the conditional first choice/);
+  assert.match(englishHtml, /Open complete report/);
+  assert.match(englishHtml, /href="\/investigations\/simulation\/report"/);
+  assert.match(englishHtml, /data-artifact-kind="illustrative_result"/);
+  assert.match(englishHtml, /data-generated-by-live-run="false"/);
+  assert.match(englishHtml, /data-ledger-write="false"/);
+  assert.match(englishHtml, /data-truth-bearing="false"/);
+
+  const chineseHtml = await renderedHtml(
+    "/investigations/simulation?start=gate",
+    { locale: "zh" },
+  );
+
+  assert.match(chineseHtml, /预制演示/);
+  assert.match(chineseHtml, /示例判断：有条件可执行/);
+  assert.match(chineseHtml, /数天至数月/);
+  assert.match(chineseHtml, /真实结论尚未产生/);
+  assert.match(chineseHtml, /门店 A 是有条件首选/);
+  assert.match(chineseHtml, /查看完整报告/);
+
+  for (const html of [englishHtml, chineseHtml]) {
+    assert.match(html, /data-real-sends="0"/);
+    assert.match(html, /data-real-replies="0"/);
+    assert.match(html, /data-real-receipts="0"/);
+    assert.doesNotMatch(html, /data-real-(?:sends|replies|receipts)="[1-9]/);
+  }
+
+  const exampleResult = JSON.parse(
+    await readFile(
+      new URL("../lib/simulation-example-result.json", import.meta.url),
+      "utf8",
+    ),
+  );
+  assert.equal(exampleResult.artifactKind, "illustrative_result");
+  assert.equal(exampleResult.truthBearing, false);
+  assert.equal(exampleResult.generatedByLiveRun, false);
+  assert.equal(exampleResult.ledgerWrite, false);
+  assert.equal(exampleResult.facts.length, 4);
+});
+
+test("renders the complete illustrative report as its own truth-labelled page", async () => {
+  const englishHtml = await renderedHtml(
+    "/investigations/simulation/report",
+  );
+
+  assert.match(
+    englishHtml,
+    /<title>Illustrative investigation report \| LRWA<\/title>/i,
+  );
+  assert.match(englishHtml, /Complete illustrative report\./);
+  assert.match(englishHtml, /Illustrative diligence report/);
+  assert.match(englishHtml, /EXECUTIVE FINDING/);
+  assert.match(englishHtml, /CLAIM RESOLUTION/);
+  assert.match(englishHtml, /EVIDENCE MATRIX/);
+  assert.match(englishHtml, /INVESTIGATION DESIGN/);
+  assert.match(englishHtml, /SOURCE REGISTER/);
+  assert.match(englishHtml, /RESPONSE LOGIC/);
+  assert.match(englishHtml, /PERSONA APPENDIX/);
+  assert.match(englishHtml, /P-12/);
+  assert.match(englishHtml, /Not collected/);
+  assert.match(englishHtml, /0 REAL EVIDENCE/);
+  assert.match(englishHtml, /data-generated-by-live-run="false"/);
+  assert.match(englishHtml, /data-ledger-write="false"/);
+  assert.match(englishHtml, /data-truth-bearing="false"/);
+
+  const chineseHtml = await renderedHtml(
+    "/investigations/simulation/report",
+    { locale: "zh" },
+  );
+
+  assert.match(chineseHtml, /<title>完整调查报告样张 \| LRWA<\/title>/i);
+  assert.match(chineseHtml, /完整调查报告样张/);
+  assert.match(chineseHtml, /逐项事实判断/);
+  assert.match(chineseHtml, /证据矩阵/);
+  assert.match(chineseHtml, /调查方法/);
+  assert.match(chineseHtml, /来源登记/);
+  assert.match(chineseHtml, /询问覆盖明细/);
+  assert.match(chineseHtml, /0 条真实证据/);
+  assert.match(chineseHtml, /未采集/);
+  assert.match(chineseHtml, /这份报告演示的是产品形态，不是真实结论/);
 });
 
 test("puts the bilingual built-in example directly inside the normal first step", async () => {
@@ -333,7 +447,13 @@ test("keeps locale selection strict, SSR-readable, and browser-persistent", asyn
 });
 
 test("keeps the simulation isolated from contact and evidence writes", async () => {
-  const [source, agentFieldSource, localizedCopySource, styles] =
+  const [
+    source,
+    agentFieldSource,
+    localizedCopySource,
+    exampleResultSource,
+    styles,
+  ] =
     await Promise.all([
       readFile(
         new URL("../components/simulation-lab.tsx", import.meta.url),
@@ -344,6 +464,10 @@ test("keeps the simulation isolated from contact and evidence writes", async () 
         "utf8",
       ),
       readFile(new URL("../lib/simulation-copy.ts", import.meta.url), "utf8"),
+      readFile(
+        new URL("../lib/simulation-example-result.json", import.meta.url),
+        "utf8",
+      ),
       readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     ]);
   await access(
@@ -363,7 +487,7 @@ test("keeps the simulation isolated from contact and evidence writes", async () 
   );
 
   assert.doesNotMatch(
-    `${source}\n${agentFieldSource}\n${localizedCopySource}`,
+    `${source}\n${agentFieldSource}\n${localizedCopySource}\n${exampleResultSource}`,
     /addServerEvidence|confirmServerContact|createServerInvestigation|hashEvidencePayload|fetch\(|WebSocket|sendBeacon/,
   );
   assert.match(source, /aria-pressed=\{isPlaying\}/);
@@ -399,6 +523,9 @@ test("keeps the simulation isolated from contact and evidence writes", async () 
   assert.match(localizedCopySource, /simulationEnglishCopy/);
   assert.match(localizedCopySource, /localizeScenario/);
   assert.match(localizedCopySource, /builtInSourceNote/);
+  assert.match(exampleResultSource, /"truthBearing": false/);
+  assert.match(exampleResultSource, /"generatedByLiveRun": false/);
+  assert.match(exampleResultSource, /"ledgerWrite": false/);
   assert.doesNotMatch(
     localizedCopySource,
     /realSends|realReplies|realReceipts|networkAction|deliveryStatus/,
@@ -435,6 +562,7 @@ test("keeps truthful state boundaries in the active product source", async () =>
       "../app/investigations/example/page.tsx",
       "../app/investigations/next/page.tsx",
       "../app/investigations/simulation/page.tsx",
+      "../app/investigations/simulation/report/page.tsx",
       "../components/home-experience.tsx",
       "../components/site-header.tsx",
       "../components/workspace-shell.tsx",
@@ -445,6 +573,7 @@ test("keeps truthful state boundaries in the active product source", async () =>
       "../components/landing-role-stage.tsx",
       "../components/simulation-entry.tsx",
       "../components/simulation-lab.tsx",
+      "../components/simulation-report.tsx",
       "../components/agent-mission-control.tsx",
       "../components/locale-provider.tsx",
       "../components/language-toggle.tsx",
@@ -454,6 +583,7 @@ test("keeps truthful state boundaries in the active product source", async () =>
       "../lib/evidence-api.ts",
       "../lib/use-investigation.ts",
       "../lib/simulation-copy.ts",
+      "../lib/simulation-example-result.json",
       "../lib/simulation-scenario.json",
     ].map((path) => readFile(new URL(path, import.meta.url), "utf8")),
   );

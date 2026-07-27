@@ -4,7 +4,6 @@ import Link from "next/link";
 import {
   ArrowLeft,
   ArrowRight,
-  ChevronRight,
   DataConnected,
   Locked,
 } from "@carbon/icons-react";
@@ -40,6 +39,12 @@ const steps = [
     shortLabel: { en: "Follow up", zh: "跟进" },
     href: "/investigations/next",
   },
+  {
+    id: "report",
+    label: { en: "Report sample", zh: "报告样张" },
+    shortLabel: { en: "Report", zh: "报告" },
+    href: "/investigations/simulation/report",
+  },
 ] as const;
 
 const modeLabelsEn: Record<InvestigationMode, string> = {
@@ -74,11 +79,24 @@ export function WorkspaceShell({
   const { record, isHydrated } = useInvestigation();
   const isSimulation = activeStep === "simulation";
   const localized = (copy: BilingualCopy) => choose(copy.en, copy.zh);
+  const disclosure = disclosureOverride
+    ? localized(disclosureOverride)
+    : choose(
+        "A strategy draft does not mean anything was sent. Only user-confirmed receipts enter the evidence ledger.",
+        "策略草案不代表已经发送。界面只把用户确认录入的回执计入证据。",
+      );
+  const storageLabel = storageLabelOverride
+    ? localized(storageLabelOverride)
+    : record?.runtime.storage === "volatile_server"
+      ? choose("Temporary server ledger", "临时服务端账本")
+      : choose("Browser evidence ledger", "浏览器证据账本");
 
   return (
     <main className="workspace" id="main-content">
-      <header className="workspace-header">
-        <Brand />
+      <header className="workspace-homebar">
+        <div className="workspace-homebar-brand">
+          <Brand />
+        </div>
         <div className="workspace-case-title">
           <span>
             {caseTitleOverride
@@ -95,90 +113,68 @@ export function WorkspaceShell({
                   : choose("No draft created", "尚未创建草稿")}
           </small>
         </div>
-        <div className="workspace-header-meta">
-          <span className="secured-label">
-            <Locked size={14} aria-hidden />
-            {storageLabelOverride
-              ? localized(storageLabelOverride)
-              : record?.runtime.storage === "volatile_server"
-                ? choose("Temporary server ledger", "临时服务端账本")
-                : choose("Browser evidence ledger", "浏览器证据账本")}
+
+        <nav
+          className="workspace-homebar-nav"
+          aria-label={choose("Investigation workflow", "调查工作流")}
+        >
+          {steps.map((step, index) => {
+            const isActive = step.id === activeStep;
+            return (
+              <Link
+                aria-current={isActive ? "page" : undefined}
+                aria-label={choose(step.label.en, step.label.zh)}
+                className={isActive ? "active" : ""}
+                href={step.href}
+                key={step.id}
+              >
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                <strong>{choose(step.shortLabel.en, step.shortLabel.zh)}</strong>
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="workspace-homebar-actions">
+          <span className="workspace-storage-state" title={storageLabel}>
+            <Locked size={13} aria-hidden />
+            {choose("Local", "本地")}
           </span>
+          <LanguageToggle compact />
           <Link className="exit-link" href="/">
             <ArrowLeft size={16} aria-hidden />
-            {choose("Back home", "返回首页")}
+            {choose("Home", "首页")}
           </Link>
         </div>
       </header>
 
-      <div className={`case-disclosure${isSimulation ? " simulation" : ""}`}>
-        <DataConnected size={15} aria-hidden />
-        <p>
-          {disclosureOverride
-            ? localized(disclosureOverride)
-            : choose(
-                "A strategy draft does not mean anything was sent. Only user-confirmed receipts enter the evidence ledger.",
-                "策略草案不代表已经发送。界面只把用户确认录入的回执计入证据。",
-              )}
-        </p>
-        <LanguageToggle compact />
-        <Link
-          aria-current={isSimulation ? "page" : undefined}
-          className="case-simulation-link"
-          href={
-            isSimulation
-              ? "/investigations/simulation"
-              : "/investigations/example"
-          }
-        >
-          {isSimulation
-            ? choose("Viewing simulation", "正在查看模拟实验")
-            : choose("View simulation", "查看模拟实验")}
-          <ArrowRight size={14} aria-hidden />
-        </Link>
-      </div>
-
-      <nav
-        className="workflow-nav"
-        aria-label={choose("Investigation workflow", "调查工作流")}
-      >
-        {steps.map((step, index) => {
-          const isActive = step.id === activeStep;
-          return (
-            <Link
-              aria-current={isActive ? "step" : undefined}
-              className={isActive ? "active" : ""}
-              href={step.href}
-              key={step.id}
-            >
-              <span className="step-index">
-                {String(index + 1).padStart(2, "0")}
-              </span>
-              <span className="step-label">
-                <span>{choose(step.label.en, step.label.zh)}</span>
-                <small>{choose(step.shortLabel.en, step.shortLabel.zh)}</small>
-              </span>
-              {index < steps.length - 1 && (
-                <ChevronRight
-                  className="workflow-chevron"
-                  size={16}
-                  aria-hidden
-                />
-              )}
-            </Link>
-          );
-        })}
-      </nav>
-
-      <section className="workspace-title">
-        <div>
+      <section className="workspace-contextbar">
+        <div className="workspace-context-title">
           <p className="eyebrow">EVIDENCE MISSION</p>
           <h1>{localized(title)}</h1>
         </div>
-        <p>{localized(description)}</p>
+        <p className="workspace-context-description">
+          {localized(description)}
+        </p>
+        <div className="workspace-context-actions">
+          <p className="workspace-context-disclosure" title={disclosure}>
+            <DataConnected size={14} aria-hidden />
+            <span>{disclosure}</span>
+          </p>
+          <Link
+            aria-current={isSimulation ? "page" : undefined}
+            className="case-simulation-link"
+            href="/investigations/simulation"
+          >
+            {isSimulation
+              ? choose("Simulation", "模拟实验")
+              : choose("Open simulation", "打开模拟")}
+            <ArrowRight size={14} aria-hidden />
+          </Link>
+        </div>
       </section>
 
-      {children}
+      <section className="workspace-viewport">{children}</section>
     </main>
   );
 }

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Barlow_Condensed, Geist, Geist_Mono } from "next/font/google";
 import { LocaleProvider } from "@/components/locale-provider";
 import { chooseLocale, localeHtmlLang } from "@/lib/i18n";
 import { getRequestLocale } from "@/lib/i18n-server";
@@ -13,6 +13,13 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const editorialDisplay = Barlow_Condensed({
+  variable: "--font-editorial",
+  subsets: ["latin"],
+  weight: ["500", "600"],
+  style: ["normal", "italic"],
 });
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -89,7 +96,9 @@ export default async function RootLayout({
 
   return (
     <html lang={localeHtmlLang(locale)}>
-      <body className={`${geistSans.variable} ${geistMono.variable} cds--g100`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} ${editorialDisplay.variable} cds--g100`}
+      >
         <LocaleProvider initialLocale={locale}>
           <a className="skip-link" href="#main-content">
             {chooseLocale(locale, "Skip to main content", "跳到主要内容")}

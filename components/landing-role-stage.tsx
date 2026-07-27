@@ -1,84 +1,68 @@
 "use client";
 
 import { useState } from "react";
-import {
-  ArrowRight,
-  Compare,
-  Delivery,
-  IbmWatsonDiscovery,
-  ShoppingCart,
-} from "@carbon/icons-react";
 import { useI18n } from "@/components/locale-provider";
 import { roleBlueprints, type RoleId } from "@/lib/investigation";
-
-const roleIcons = {
-  buyer: ShoppingCart,
-  supplier: Delivery,
-  competitor: Compare,
-  skeptic: IbmWatsonDiscovery,
-} as const;
 
 const englishRoles: Record<
   RoleId,
   {
     name: string;
     perspective: string;
-    opening: string;
-    followUp: string;
-    receipt: string;
-    boundary: string;
+    probe: string;
+    proof: string;
   }
 > = {
   buyer: {
     name: "Customer",
-    perspective:
-      "Test availability, delivery and support through a real buying journey.",
-    opening:
-      "Ask what can actually be purchased now, where it is available, and what changes during peak demand.",
-    followUp:
-      "Push a template reply toward a named location, time window, fulfillment limit, and exception.",
-    receipt:
-      "Original support reply, availability page, capture time, and source entry point.",
-    boundary:
-      "Use a real authorized account. Do not invent personal details or claim an identity you do not hold.",
+    perspective: "Test what can actually be bought.",
+    probe: "Availability, timing, exceptions",
+    proof: "Original reply and source",
   },
   supplier: {
     name: "Supplier",
-    perspective:
-      "Test capacity, replenishment and coverage through partnership questions.",
-    opening:
-      "Ask about service regions, replenishment frequency, delivery batches, and acceptance requirements.",
-    followUp:
-      "Turn broad scale claims into frequency, region, minimum batch, and exception handling.",
-    receipt:
-      "Authorized correspondence, public partnership terms, or customer-provided supply records.",
-    boundary:
-      "Any partnership representation must come from a real authorized business entity.",
+    perspective: "Test what can actually be supplied.",
+    probe: "Capacity, frequency, coverage",
+    proof: "Terms and authorized correspondence",
   },
   competitor: {
     name: "Competitor",
-    perspective:
-      "Compare stores, pricing and fulfillment with one repeatable method.",
-    opening:
-      "Observe the target and comparable brands using the same time window, geography, and field definitions.",
-    followUp:
-      "Keep missing or conflicting fields unknown. Do not fill them with an industry average.",
-    receipt:
-      "Public page capture, query conditions, capture time, and field definitions.",
-    boundary:
-      "Use only public pages that permit access or a formal data interface.",
+    perspective: "Compare every operator with one method.",
+    probe: "Price, location, fulfillment",
+    proof: "Matched public captures",
   },
   skeptic: {
     name: "Skeptic",
-    perspective:
-      "Search for explanations that could overturn the current thesis.",
-    opening:
-      "Ask which channels, seasonal effects, or accounting choices could make the available evidence misleading.",
-    followUp:
-      "Convert each alternative explanation into another evidence request instead of adding it to the conclusion.",
-    receipt:
-      "Alternative hypothesis, required primary record, and the threshold that would change the decision.",
-    boundary: "Missing evidence is not negative evidence.",
+    perspective: "Try to break the current thesis.",
+    probe: "Conflicts, seasonality, alternatives",
+    proof: "A record that could change the decision",
+  },
+};
+
+const chineseRoles: typeof englishRoles = {
+  buyer: {
+    name: "客户",
+    perspective: "验证实际可以买到什么。",
+    probe: "库存、时间、例外",
+    proof: "原始回复与来源",
+  },
+  supplier: {
+    name: "供应商",
+    perspective: "验证实际可以供应什么。",
+    probe: "产能、频率、覆盖",
+    proof: "条款与授权沟通",
+  },
+  competitor: {
+    name: "竞品",
+    perspective: "用同一方法比较每个经营者。",
+    probe: "价格、位置、履约",
+    proof: "同口径公开快照",
+  },
+  skeptic: {
+    name: "挑战者",
+    perspective: "尝试推翻当前判断。",
+    probe: "冲突、季节性、替代解释",
+    proof: "足以改变决策的凭证",
   },
 };
 
@@ -87,8 +71,8 @@ export function LandingRoleStage() {
   const [activeRole, setActiveRole] = useState<RoleId>("buyer");
   const selected =
     roleBlueprints.find((role) => role.id === activeRole) ?? roleBlueprints[0];
-  const selectedCopy = locale === "en" ? englishRoles[selected.id] : selected;
-  const SelectedIcon = roleIcons[selected.id];
+  const localizedRoles = locale === "en" ? englishRoles : chineseRoles;
+  const selectedCopy = localizedRoles[selected.id];
 
   function moveTab(current: RoleId, direction: -1 | 1) {
     const currentIndex = roleBlueprints.findIndex(
@@ -112,10 +96,8 @@ export function LandingRoleStage() {
         aria-label={locale === "en" ? "Research role examples" : "调查角色示例"}
       >
         {roleBlueprints.map((role) => {
-          const Icon = roleIcons[role.id];
           const isActive = role.id === selected.id;
-          const roleName =
-            locale === "en" ? englishRoles[role.id].name : role.name;
+          const roleName = localizedRoles[role.id].name;
           return (
             <button
               aria-controls={`role-panel-${role.id}`}
@@ -149,12 +131,10 @@ export function LandingRoleStage() {
               tabIndex={isActive ? 0 : -1}
               type="button"
             >
-              <Icon size={20} aria-hidden />
               <span>
                 <small>{role.code}</small>
                 <strong>{roleName}</strong>
               </span>
-              <ArrowRight size={16} aria-hidden />
             </button>
           );
         })}
@@ -164,12 +144,10 @@ export function LandingRoleStage() {
         aria-labelledby={`role-tab-${selected.id}`}
         className="role-stage-panel"
         id={`role-panel-${selected.id}`}
+        key={selected.id}
         role="tabpanel"
       >
         <div className="role-stage-panel-head">
-          <span>
-            <SelectedIcon size={24} aria-hidden />
-          </span>
           <p>
             {locale === "en"
               ? "METHOD PREVIEW / NOT EXECUTED"
@@ -177,21 +155,16 @@ export function LandingRoleStage() {
           </p>
         </div>
         <h3>{selectedCopy.perspective}</h3>
-        <div className="role-stage-sequence">
+        <dl className="role-stage-brief">
           <div>
-            <small>{locale === "en" ? "OPEN" : "首轮询问"}</small>
-            <p>{selectedCopy.opening}</p>
+            <dt>{locale === "en" ? "PROBE" : "追问"}</dt>
+            <dd>{selectedCopy.probe}</dd>
           </div>
           <div>
-            <small>{locale === "en" ? "DEEPEN" : "继续追问"}</small>
-            <p>{selectedCopy.followUp}</p>
+            <dt>{locale === "en" ? "PROOF" : "留证"}</dt>
+            <dd>{selectedCopy.proof}</dd>
           </div>
-          <div>
-            <small>{locale === "en" ? "RECEIPT" : "需要留下"}</small>
-            <p>{selectedCopy.receipt}</p>
-          </div>
-        </div>
-        <p className="role-stage-boundary">{selectedCopy.boundary}</p>
+        </dl>
       </article>
     </div>
   );
