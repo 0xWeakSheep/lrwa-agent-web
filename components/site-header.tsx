@@ -31,6 +31,9 @@ export function SiteHeader() {
         <LanguageToggle compact />
         <Link href="/#method">{choose("Method", "方法")}</Link>
         <Link href="/#boundaries">{choose("Boundaries", "边界")}</Link>
+        <Link className="site-docs-link" href="/docs">
+          {choose("Docs", "文档")}
+        </Link>
         <Link href="/investigations">
           {choose("Start investigation", "发起调查")}
         </Link>
