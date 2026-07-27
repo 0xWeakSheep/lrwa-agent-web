@@ -1,0 +1,138 @@
+{
+  "version": 1,
+  "artifactKind": "illustrative_result",
+  "truthBearing": false,
+  "generatedByLiveRun": false,
+  "ledgerWrite": false,
+  "facts": [
+    {
+      "id": "F-01",
+      "label": {
+        "en": "Store identity",
+        "zh": "门店身份"
+      },
+      "status": {
+        "en": "Example: supported",
+        "zh": "示例：支持"
+      },
+      "detail": {
+        "en": "The specimen assumes the two public names resolve to separate service points. Their actual status remains unverified.",
+        "zh": "结果样张假设两个公开名称对应不同服务点；现实状态仍未核验。"
+      }
+    },
+    {
+      "id": "F-02",
+      "label": {
+        "en": "Operating window",
+        "zh": "营业时段"
+      },
+      "status": {
+        "en": "Example: partial",
+        "zh": "示例：部分支持"
+      },
+      "detail": {
+        "en": "The specimen assumes Store A covers the target weekday morning. Store B remains unresolved.",
+        "zh": "结果样张假设门店 A 覆盖目标工作日上午；门店 B 仍待复核。"
+      }
+    },
+    {
+      "id": "F-03",
+      "label": {
+        "en": "Bulk pickup",
+        "zh": "批量自取"
+      },
+      "status": {
+        "en": "Example: conditional",
+        "zh": "示例：有条件"
+      },
+      "detail": {
+        "en": "The specimen assumes Store A can fulfill 20 drinks before 09:00 when confirmed on the preceding business day.",
+        "zh": "结果样张假设门店 A 在前一工作日完成确认后，可在上午 09:00 前完成 20 杯饮品。"
+      }
+    },
+    {
+      "id": "F-04",
+      "label": {
+        "en": "Fulfillment limits",
+        "zh": "履约限制"
+      },
+      "status": {
+        "en": "Example: conditions apply",
+        "zh": "示例：存在前置条件"
+      },
+      "detail": {
+        "en": "Target date, drink mix, payment, invoicing, and stock contingencies still require confirmation.",
+        "zh": "目标日期、饮品组合、付款、发票与临时缺货边界仍需逐项确认。"
+      }
+    }
+  ],
+  "actions": [
+    {
+      "code": "01",
+      "label": {
+        "en": "Candidate route",
+        "zh": "候选路径"
+      },
+      "detail": {
+        "en": "Use Store A as the conditional first choice in this fictional specimen.",
+        "zh": "在这份虚构样张中，将门店 A 作为有条件首选。"
+      }
+    },
+    {
+      "code": "02",
+      "label": {
+        "en": "Commitment window",
+        "zh": "承诺窗口"
+      },
+      "detail": {
+        "en": "Obtain written confirmation of store, quantity, and ready time on the preceding business day.",
+        "zh": "在前一工作日取得包含门店、数量和备妥时间的书面确认。"
+      }
+    },
+    {
+      "code": "03",
+      "label": {
+        "en": "Fallback",
+        "zh": "备选方案"
+      },
+      "detail": {
+        "en": "If confirmation is missing or conflicts, split the order or move to another verified provider.",
+        "zh": "如果确认缺失或相互冲突，则拆分订单，或转向另一个已经核验的供应方。"
+      }
+    },
+    {
+      "code": "04",
+      "label": {
+        "en": "Stop rule",
+        "zh": "停止条件"
+      },
+      "detail": {
+        "en": "Do not place the order without a receipt binding the store, quantity, and pickup time.",
+        "zh": "如果没有同时绑定门店、数量和取货时间的回执，就不执行下单。"
+      }
+    }
+  ],
+  "evidenceRequirements": [
+    {
+      "coverage": "F-01",
+      "label": {
+        "en": "Store identity receipt",
+        "zh": "门店身份回执"
+      }
+    },
+    {
+      "coverage": "F-02",
+      "label": {
+        "en": "Target operating-window receipt",
+        "zh": "目标时段营业回执"
+      }
+    },
+    {
+      "coverage": "F-03 · F-04",
+      "label": {
+        "en": "Quantity, timing, and fulfillment receipt",
+        "zh": "数量、时间与履约回执"
+      }
+    }
+  ]
+}
