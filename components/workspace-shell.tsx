@@ -1,37 +1,40 @@
+"use client";
+
 import Link from "next/link";
 import {
   ArrowLeft,
-  Checkmark,
   ChevronRight,
+  DataConnected,
   Locked,
 } from "@carbon/icons-react";
+import { modeLabels } from "@/lib/investigation";
+import { useInvestigation } from "@/lib/use-investigation";
 import { Brand } from "./site-header";
-import { SyntheticLabel } from "./synthetic-label";
 
 const steps = [
   {
     id: "plan",
-    label: "Mission plan",
-    shortLabel: "Plan",
-    href: "/cases/morrow-coffee",
+    label: "定义主张",
+    shortLabel: "定义",
+    href: "/investigations",
   },
   {
     id: "live",
-    label: "Live mission",
-    shortLabel: "Live",
-    href: "/cases/morrow-coffee/live",
+    label: "角色调查",
+    shortLabel: "调查",
+    href: "/investigations/workbench",
   },
   {
     id: "findings",
-    label: "Findings",
-    shortLabel: "Findings",
-    href: "/cases/morrow-coffee/findings",
+    label: "证据账本",
+    shortLabel: "证据",
+    href: "/investigations/evidence",
   },
   {
     id: "actions",
-    label: "Decision actions",
-    shortLabel: "Actions",
-    href: "/cases/morrow-coffee/actions",
+    label: "下一步",
+    shortLabel: "跟进",
+    href: "/investigations/next",
   },
 ] as const;
 
@@ -48,53 +51,55 @@ export function WorkspaceShell({
   description: string;
   children: React.ReactNode;
 }) {
-  const activeIndex = steps.findIndex((step) => step.id === activeStep);
+  const { record, isHydrated } = useInvestigation();
 
   return (
     <main className="workspace" id="main-content">
       <header className="workspace-header">
         <Brand />
         <div className="workspace-case-title">
-          <span>Morrow Coffee</span>
-          <small>Series A diligence</small>
+          <span>{record?.subject || "新调查"}</span>
+          <small>
+            {!isHydrated
+              ? "正在读取本地草稿"
+              : record
+                ? modeLabels[record.mode]
+                : "尚未创建草稿"}
+          </small>
         </div>
         <div className="workspace-header-meta">
           <span className="secured-label">
             <Locked size={14} aria-hidden />
-            Bounded sandbox
+            {record?.runtime.storage === "volatile_server"
+              ? "临时服务端账本"
+              : "浏览器证据账本"}
           </span>
           <Link className="exit-link" href="/">
             <ArrowLeft size={16} aria-hidden />
-            Exit case
+            返回首页
           </Link>
         </div>
       </header>
 
       <div className="case-disclosure">
-        <SyntheticLabel compact />
+        <DataConnected size={15} aria-hidden />
         <p>
-          This workspace uses a fictional company and illustrative evidence.
-          It does not identify or assess any real business.
+          策略草案不代表已经发送。界面只把用户确认录入的回执计入证据。
         </p>
       </div>
 
       <nav className="workflow-nav" aria-label="Investigation workflow">
         {steps.map((step, index) => {
           const isActive = step.id === activeStep;
-          const isComplete = index < activeIndex;
           return (
             <Link
               aria-current={isActive ? "step" : undefined}
-              className={isActive ? "active" : isComplete ? "complete" : ""}
+              className={isActive ? "active" : ""}
               href={step.href}
               key={step.id}
             >
               <span className="step-index">
-                {isComplete ? (
-                  <Checkmark size={14} aria-label="Complete" />
-                ) : (
-                  String(index + 1).padStart(2, "0")
-                )}
+                {String(index + 1).padStart(2, "0")}
               </span>
               <span className="step-label">
                 <span>{step.label}</span>
@@ -114,7 +119,7 @@ export function WorkspaceShell({
 
       <section className="workspace-title">
         <div>
-          <p className="eyebrow">Case 01 / Morrow Coffee</p>
+          <p className="eyebrow">EVIDENCE MISSION</p>
           <h1>{title}</h1>
         </div>
         <p>{description}</p>

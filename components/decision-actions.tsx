@@ -1,53 +1,66 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { useMemo, useState } from "react";
 import { Button, Checkbox, InlineNotification } from "@carbon/react";
 import {
-  CheckmarkFilled,
-  DocumentDownload,
+  ArrowRight,
+  Checkmark,
+  Copy,
   Locked,
-  SendAlt,
+  Task,
 } from "@carbon/icons-react";
-import { demoCase } from "@/lib/demo-data";
-
-const actions = [
-  {
-    id: "pos",
-    priority: "P0",
-    owner: "Deal team",
-    title: demoCase.finding.nextActions[0],
-    rationale: "Directly tests transaction volume across high, median and low-signal stores.",
-    closes: "GMV recognition and store-level throughput",
-  },
-  {
-    id: "corporate",
-    priority: "P0",
-    owner: "Finance",
-    title: demoCase.finding.nextActions[1],
-    rationale: "Resolves the strongest alternative hypothesis raised by the Skeptic Agent.",
-    closes: "Unobserved corporate-order share",
-  },
-  {
-    id: "field",
-    priority: "P1",
-    owner: "Operating partner",
-    title: demoCase.finding.nextActions[2],
-    rationale: "Confirms whether repeated inactive signals represent closures or temporary outages.",
-    closes: "Nine store-status exceptions",
-  },
-  {
-    id: "valuation",
-    priority: "P1",
-    owner: "Investment lead",
-    title: demoCase.finding.nextActions[3],
-    rationale: "Keeps the committee decision robust while source documents are outstanding.",
-    closes: "Downside exposure at observed revenue",
-  },
-];
+import { missionStatusLabels } from "@/lib/investigation";
+import { useInvestigation } from "@/lib/use-investigation";
 
 export function DecisionActions() {
-  const [selected, setSelected] = useState<string[]>(["pos", "corporate", "field"]);
-  const [packaged, setPackaged] = useState(false);
+  const { record, isHydrated } = useInvestigation();
+  const [selected, setSelected] = useState<string[]>([]);
+  const [copyState, setCopyState] = useState<"idle" | "success" | "error">(
+    "idle",
+  );
+
+  const actions = useMemo(() => {
+    if (!record) {
+      return [];
+    }
+    return record.missions.map((mission) => {
+      switch (mission.status) {
+        case "planned":
+          return {
+            id: mission.id,
+            role: mission.name,
+            status: "待审核",
+            title: `审核${mission.name}的首轮询问与身份边界`,
+            closes: mission.objective,
+          };
+        case "prepared":
+          return {
+            id: mission.id,
+            role: mission.name,
+            status: "待发送",
+            title: `从真实、授权的渠道发出${mission.name}询问`,
+            closes: mission.receipt,
+          };
+        case "contacted":
+          return {
+            id: mission.id,
+            role: mission.name,
+            status: "待回执",
+            title: `等待并记录${mission.name}的真实回复`,
+            closes: mission.receipt,
+          };
+        case "evidence_received":
+          return {
+            id: mission.id,
+            role: mission.name,
+            status: "待复核",
+            title: `复核${mission.name}回执的来源与代表性`,
+            closes: "确认来源、时间、上下文和是否需要第二条证据。",
+          };
+      }
+    });
+  }, [record]);
 
   function toggleAction(id: string, checked: boolean) {
     setSelected((current) =>
@@ -57,172 +70,168 @@ export function DecisionActions() {
     );
   }
 
-  function packageRequest() {
-    setPackaged(true);
-    window.setTimeout(() => setPackaged(false), 3600);
+  async function copyActions() {
+    const chosen = actions.filter((action) => selected.includes(action.id));
+    if (!chosen.length) {
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(
+        chosen
+          .map(
+            (action, index) =>
+              `${index + 1}. ${action.title}\n   需要解决：${action.closes}`,
+          )
+          .join("\n\n"),
+      );
+      setCopyState("success");
+    } catch {
+      setCopyState("error");
+    }
   }
 
+  if (!isHydrated) {
+    return (
+      <div className="truthful-loading" role="status">
+        正在读取跟进动作
+      </div>
+    );
+  }
+
+  if (!record) {
+    return (
+      <section className="honest-empty-state">
+        <Task size={42} aria-hidden />
+        <p>NO INVESTIGATION DRAFT</p>
+        <h2>没有调查，就没有跟进动作。</h2>
+        <span>先定义一个商业主张，让每个下一步都对应真实的不确定性。</span>
+        <Link className="cinematic-primary" href="/investigations">
+          定义主张
+          <ArrowRight size={20} aria-hidden />
+        </Link>
+      </section>
+    );
+  }
+
+  const coveredRoles = new Set(record.evidence.map((item) => item.roleId));
+  const reviewReady = coveredRoles.size >= 2;
+
   return (
-    <div className="actions-layout">
-      <section className="decision-posture">
+    <div className="next-action-workspace">
+      <section className="decision-gate">
         <div>
-          <p className="mono-label">DECISION POSTURE / CONDITIONAL HOLD</p>
-          <h2>Pause for targeted evidence, not a broader memo.</h2>
-          <p>
-            The current signals do not support June GMV as disclosed. Three
-            bounded requests can resolve the largest uncertainties before the
-            investment committee.
-          </p>
+          <p>DECISION GATE</p>
+          <h2>{reviewReady ? "进入人工复核，不自动下结论。" : "继续求证，不生成研报。"}</h2>
+          <span>
+            {reviewReady
+              ? "多个角色已有用户录入回执，下一步是核验来源与冲突。"
+              : "当前证据覆盖不足，任何财务估算都将保持锁定。"}
+          </span>
         </div>
-        <div
-          className="posture-meter"
-          aria-label="Committee readiness: primary records outstanding"
-        >
-          <span>Committee readiness</span>
-          <strong>Not ready</strong>
-          <small>Primary records outstanding</small>
+        <div>
+          {reviewReady ? (
+            <Checkmark size={30} aria-hidden />
+          ) : (
+            <Locked size={30} aria-hidden />
+          )}
+          <strong>{reviewReady ? "HUMAN REVIEW" : "NO CONCLUSION"}</strong>
         </div>
       </section>
 
-      <div className="actions-main-grid">
+      <div className="next-action-grid">
         <section className="action-queue panel" aria-labelledby="queue-title">
-          <div className="panel-heading">
+          <header className="action-queue-heading">
             <div>
-              <p className="mono-label">SUPERVISOR / REQUEST QUEUE</p>
-              <h2 id="queue-title">Evidence requests</h2>
+              <p>NEXT EVIDENCE REQUESTS</p>
+              <h2 id="queue-title">下一轮动作</h2>
             </div>
-            <span className="panel-stat">
-              <strong>{selected.length}</strong> selected
-            </span>
-          </div>
-
-          <div className="action-list">
+            <span>由当前真实状态生成</span>
+          </header>
+          <div className="truthful-action-list">
             {actions.map((action) => (
               <article key={action.id}>
                 <Checkbox
                   checked={selected.includes(action.id)}
+                  hideLabel
                   id={`action-${action.id}`}
-                  labelText=""
-                  onChange={(_, state) => toggleAction(action.id, state.checked)}
+                  labelText={`选择动作：${action.title}`}
+                  onChange={(_, state) =>
+                    toggleAction(action.id, state.checked)
+                  }
                 />
-                <span className="priority-label">{action.priority}</span>
+                <div className="truthful-action-status">
+                  <span>{action.role}</span>
+                  <strong>{action.status}</strong>
+                </div>
                 <div>
                   <h3>{action.title}</h3>
-                  <p>{action.rationale}</p>
-                  <dl>
-                    <div>
-                      <dt>Owner</dt>
-                      <dd>{action.owner}</dd>
-                    </div>
-                    <div>
-                      <dt>Uncertainty closed</dt>
-                      <dd>{action.closes}</dd>
-                    </div>
-                  </dl>
+                  <p>{action.closes}</p>
                 </div>
               </article>
             ))}
           </div>
-
-          <div className="queue-actions">
+          <div className="action-queue-controls">
             <Button
               disabled={selected.length === 0}
               kind="primary"
-              onClick={packageRequest}
-              renderIcon={SendAlt}
+              onClick={copyActions}
+              renderIcon={Copy}
             >
-              Package selected requests
+              复制所选动作
             </Button>
-            <Button
-              kind="ghost"
-              onClick={() => window.print()}
-              renderIcon={DocumentDownload}
-            >
-              Print decision brief
-            </Button>
+            <Link className="text-link" href="/investigations/workbench">
+              返回角色任务台
+              <ArrowRight size={16} aria-hidden />
+            </Link>
           </div>
-
-          {packaged && (
+          {copyState !== "idle" && (
             <InlineNotification
-              kind="success"
-              lowContrast
               hideCloseButton
-              title="Request package ready"
-              subtitle={`${selected.length} requests were assembled in this local demo. No message was sent.`}
+              kind={copyState === "success" ? "success" : "error"}
+              lowContrast
+              subtitle={
+                copyState === "success"
+                  ? "动作已复制。系统没有向任何人发送消息。"
+                  : "浏览器没有允许复制，请手动选择文本。"
+              }
+              title={copyState === "success" ? "已复制" : "未复制"}
             />
           )}
         </section>
 
-        <aside className="scenario-panel panel" aria-labelledby="scenario-title">
-          <div className="panel-heading">
+        <aside className="action-context">
+          <p>CURRENT STATE</p>
+          <h2>{record.subject}</h2>
+          <blockquote>{record.claim}</blockquote>
+          <dl>
             <div>
-              <p className="mono-label">ILLUSTRATIVE SENSITIVITY</p>
-              <h2 id="scenario-title">Decision range</h2>
+              <dt>角色策略</dt>
+              <dd>{record.missions.length} 条当前计划</dd>
             </div>
-          </div>
-          <div className="scenario-table" role="table" aria-label="Illustrative revenue scenarios">
-            <div role="row">
-              <span role="columnheader">Scenario</span>
-              <span role="columnheader">June GMV</span>
-              <span role="columnheader">vs claim</span>
+            <div>
+              <dt>用户回执</dt>
+              <dd>
+                {record.evidence.length
+                  ? `${record.evidence.length} 条用户录入`
+                  : "尚无回执"}
+              </dd>
             </div>
-            <div role="row">
-              <span role="cell">Observed base</span>
-              <strong role="cell">¥1.92m</strong>
-              <span role="cell" className="negative-value">
-                -42.3%
-              </span>
+            <div>
+              <dt>结论状态</dt>
+              <dd>{reviewReady ? "待人工复核" : "保持锁定"}</dd>
             </div>
-            <div role="row">
-              <span role="cell">20% group-order replay</span>
-              <strong role="cell">¥2.40m</strong>
-              <span role="cell" className="negative-value">
-                -27.9%
-              </span>
-            </div>
-            <div role="row">
-              <span role="cell">Company claim</span>
-              <strong role="cell">¥3.33m</strong>
-              <span role="cell">Reference</span>
-            </div>
-          </div>
-          <div className="scenario-note">
-            <Locked size={18} aria-hidden />
-            <p>
-              These values belong only to the fictional Morrow Coffee sandbox
-              and are not an investment recommendation.
-            </p>
+          </dl>
+          <div>
+            <span>角色状态</span>
+            {record.missions.map((mission) => (
+              <p key={mission.id}>
+                <strong>{mission.name}</strong>
+                {missionStatusLabels[mission.status]}
+              </p>
+            ))}
           </div>
         </aside>
       </div>
-
-      <section className="audit-package" aria-labelledby="package-title">
-        <div>
-          <CheckmarkFilled size={24} aria-hidden />
-          <div>
-            <p className="mono-label">AUDIT PACKAGE / READY</p>
-            <h2 id="package-title">The investigation stays reproducible.</h2>
-          </div>
-        </div>
-        <dl>
-          <div>
-            <dt>Seed</dt>
-            <dd>240727</dd>
-          </div>
-          <div>
-            <dt>Parameterized probe quota</dt>
-            <dd>1,024 planned units</dd>
-          </div>
-          <div>
-            <dt>Evidence lineage</dt>
-            <dd>5 content-hashed receipts</dd>
-          </div>
-          <div>
-            <dt>Replay lineage</dt>
-            <dd>1 linked hypothesis</dd>
-          </div>
-        </dl>
-      </section>
     </div>
   );
 }

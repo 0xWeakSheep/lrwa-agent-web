@@ -1,94 +1,120 @@
 # LRWA Agent Web
 
-LRWA, Live Real-World Assurance, is an OpenArena BUIDL_QUESTS 2026 demo for
-turning business claims into bounded and auditable reality-verification
-missions.
+LRWA is an evidence-operations prototype for commercial diligence. It turns
+one business claim into role-based inquiry strategies, staged follow-ups,
+traceable receipts and the next evidence request.
 
-The demo follows a fictional Series A diligence case for Morrow Coffee. It
-coordinates specialist agents across storefront, consumer, digital-channel,
-staffing and supply-chain signals, then links every conclusion to synthetic
-evidence, uncertainty and a deterministic replay.
+The product starts empty. It does not claim to have investigated a company,
+contacted a merchant or connected to an external platform.
 
-> All companies, stores, events and evidence displayed in this project are
-> fictional and illustrative. The demo does not contact real merchants, place
-> real orders, scrape live platforms or process personal information.
+## Current product flow
 
-## Public demo and reviewer materials
+1. Define the subject and one falsifiable business claim.
+2. Select buyer, supplier, peer and skeptic perspectives.
+3. Review the opening question, follow-up rule, requested receipt and identity
+   boundary for each role.
+4. Copy a strategy or confirm an action that the user performed through an
+   authorized channel. The server never sends merely because a plan exists.
+5. Manually record a user-submitted receipt. The server computes a SHA-256
+   content hash when connected; browser-only mode is labeled separately.
+6. Keep the conclusion locked until more than one role has actual receipts.
+7. Turn every unresolved route into a concrete next action.
 
-- Product demo: https://lrwa-agent-web.cheeky-angel-7701.chatgpt.site
-- 90-second film: https://cdn.jsdelivr.net/gh/0xWeakSheep/lrwa-agent-web@11a13d001444f047ff3582870b2f3f6adb6f6c60/public/materials/LRWA_OpenArena_Demo_90s_web.mp4
-- Seed deck: https://cdn.jsdelivr.net/gh/0xWeakSheep/lrwa-agent-web@6e98567e579c0c967c68729f6231cfe09480926d/public/materials/LRWA_Seed_Deck.pdf
-- Agent backend: https://github.com/0xWeakSheep/lrwa-agent
-
-## Demo flow
-
-1. Review four material business claims and a 1,024-unit planned probe quota.
-2. Start the synthetic mission through the explicit demo interaction gate.
-3. Watch the Reality Twin mission through the backend SSE stream or local
-   deterministic fallback.
-4. Inspect the GMV finding and trace it through five evidence artifacts.
-5. Inspect a 20% corporate-order counterfactual and run the same-seed replay.
-6. Turn remaining uncertainty into targeted evidence requests.
+Strategy drafts never count as sent messages. Copied text never counts as an
+external action. Only user-confirmed receipts appear in the evidence ledger.
 
 ## Routes
 
-- `/` product story and live product preview
-- `/cases/morrow-coffee` mission plan and demo interaction gate
-- `/cases/morrow-coffee/live` agent mission control
-- `/cases/morrow-coffee/findings` evidence ledger and skeptic replay
-- `/cases/morrow-coffee/actions` decision action queue
+- `/` product story, role-method preview and operating boundaries
+- `/investigations` claim definition and role plan
+- `/investigations/workbench` staged role workbench
+- `/investigations/evidence` truthful evidence ledger
+- `/investigations/next` next evidence requests
+
+The retired fictional-case routes return `404`. The interface no longer
+contains a prefilled sample-company case.
+
+## Local state
+
+The frontend first writes to the NestJS evidence-operations API. The current
+API uses volatile in-memory storage, so a backend restart removes its records.
+The browser keeps the current snapshot under `lrwa-investigation-v2`.
+
+- If the API is unreachable, the UI explicitly enters browser-only mode.
+- A hosted build with no configured API address immediately enters
+  browser-only mode and never probes the reviewer's own `localhost`.
+- A later sync failure is shown as `server_sync_failed`; it is never presented
+  as a successful server action.
+- If a request was sent but its response was lost, the UI records
+  `server_sync_unknown` and does not claim that the server failed or
+  automatically repeat an external action.
+- No Meituan, Google or other external data connector is configured.
+- No automatic platform query is performed.
+- No synthetic result is inserted when an API is unavailable.
+- Clearing browser storage removes the local snapshot and browser-only data.
+- Browser-only records are plaintext device-local prototype data. Do not enter
+  credentials, personal information or unauthorized sensitive material.
+
+Both storage modes are suitable for a prototype only. Production use needs
+authentication, encrypted server-side storage, role permissions, retention
+controls and a complete provenance model.
 
 ## Run locally
 
 Requirements:
 
 - Node.js 22.13 or newer
-- The LRWA NestJS API, optional for connected mode
 
 ```bash
 npm install
-cp .env.example .env.local
 npm run dev
 ```
 
-The frontend runs at `http://localhost:3000`. The example environment points to
-the API at `http://localhost:3001/v1`.
+The frontend runs at `http://localhost:3000`.
 
-To demo without the API, remove `NEXT_PUBLIC_API_BASE_URL` from `.env.local`.
-The app then runs locally with the same seed, values and visible `Deterministic
-local fallback` runtime label. A deployed build never attempts to call
-localhost unless that URL was explicitly configured.
+Start the NestJS service from the sibling `lrwa-agent` repository at
+`http://localhost:3001/v1`, then configure:
 
-## API integration
-
-The unauthenticated demo interaction gate drives the full backend lifecycle:
-
-```text
-POST /v1/demo/cases
-POST /v1/investigations/:id/plan
-POST /v1/investigations/:id/approve
-POST /v1/investigations/:id/start
-GET  /v1/investigations/:id/events
-POST /v1/investigations/:id/replay
-GET  /v1/investigations/:id/findings
+```dotenv
+NEXT_PUBLIC_LRWA_API_URL=http://localhost:3001/v1
 ```
 
-The replay submits `{ "corporateOrderShare": 0.2 }` and reads the resulting GMV
-finding from the API. Local fallback uses the same canonical result: ¥2.40m,
-¥2.12m to ¥2.72m scenario band, 27.9% gap and a 0.82 heuristic policy score.
+`NEXT_PUBLIC_LRWA_API_URL` is only a public service address. DeepSeek and
+connector credentials stay in the backend.
+
+## DeepSeek planning boundary
+
+DeepSeek is opt-in in the claim form. When enabled, the subject, claim and
+optional source note are sent through the backend to generate draft inquiry
+language. The returned provenance states whether the model ran live or the
+backend used a local fallback.
+
+DeepSeek cannot mark a mission as contacted, write a receipt, create a metric,
+or unlock a conclusion. Those state changes require a user-confirmed action or
+a user-submitted receipt.
+
+## Future integrations
+
+Real connectors must be implemented server-side. API keys and partner secrets
+must never be placed in `NEXT_PUBLIC_*` variables or browser storage.
+
+Each connector should expose explicit loading, empty, permission, rate-limit
+and error states. A failed connector must stay failed until the user chooses a
+different source. It must never silently substitute a scripted result.
+
+The public demo intentionally has no remote API address. Do not expose the
+unauthenticated prototype backend or attach a live model key to a public
+endpoint.
 
 ## Technical shape
 
 - Next.js 16 and React 19
-- TypeScript with strict mode
-- Carbon components and Carbon icons
-- Server-rendered route shells with focused client interaction islands
-- EventSource integration with a deterministic offline fallback
-- Accessible, responsive dark intelligence-terminal interface
-
-No separate AI repository is required for the demo. Agent roles, guardrails,
-seeded evidence generation, statistics and event orchestration live in the
-NestJS backend so the audit trail remains in one place.
+- TypeScript strict mode
+- Carbon components and icons
+- Vinext and Vite for Cloudflare-compatible builds
+- NestJS evidence-operations API with browser-only fallback
+- Explicit planning, storage and hash-authority provenance labels
+- Responsive dark editorial interface using the supplied LRWA mark
 
 ## Verification
 
@@ -98,8 +124,8 @@ npm run typecheck
 npm test
 ```
 
-`npm test` creates a production build and verifies all five rendered routes,
-synthetic-data disclosures and starter-code removal.
+The test suite builds the production worker, renders all five routes, verifies
+the supplied logo assets, checks that the old scripted-completion fallback is
+absent and guards the hosted API fallback boundary.
 
-See [ASSET_CREDITS.md](./ASSET_CREDITS.md) for generated-asset provenance and
-third-party license acknowledgements.
+See [ASSET_CREDITS.md](./ASSET_CREDITS.md) for generated-asset provenance.

@@ -17,14 +17,14 @@ export const metadata: Metadata = {
     "https://lrwa-agent-web.cheeky-angel-7701.chatgpt.site",
   ),
   title: {
-    default: "LRWA | Live Real-World Assurance",
+    default: "LRWA | Evidence Operations",
     template: "%s | LRWA",
   },
   description:
-    "Turn business claims into bounded, auditable real-world verification missions.",
+    "把商业主张拆成角色、追问和可追溯证据的调查工作流。",
   applicationName: "LRWA",
   keywords: [
-    "autonomous agents",
+    "evidence agents",
     "commercial diligence",
     "market intelligence",
     "evidence verification",
@@ -39,9 +39,9 @@ export const metadata: Metadata = {
     shortcut: "/favicon.svg?v=lrwa-mark-20260727",
   },
   openGraph: {
-    title: "LRWA | Live Real-World Assurance",
+    title: "LRWA | Evidence Operations",
     description:
-      "Test the world behind the spreadsheet with governed verification agents.",
+      "Design role-based evidence missions before drawing a conclusion.",
     type: "website",
     siteName: "LRWA",
     images: [
@@ -49,15 +49,15 @@ export const metadata: Metadata = {
         url: "/lrwa-cinematic-hero.webp",
         width: 1672,
         height: 941,
-        alt: "LRWA verification network illuminating a city at night",
+        alt: "LRWA evidence network illustrated across a city",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "LRWA | Live Real-World Assurance",
+    title: "LRWA | Evidence Operations",
     description:
-      "Test the world behind the spreadsheet with governed verification agents.",
+      "Design role-based evidence missions before drawing a conclusion.",
     images: ["/lrwa-cinematic-hero.webp"],
   },
 };
@@ -73,12 +73,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="zh-CN">
       <body
         className={`${geistSans.variable} ${geistMono.variable} cds--g100`}
       >
         <a className="skip-link" href="#main-content">
-          Skip to main content
+          跳到主要内容
         </a>
         {children}
       </body>
