@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useRef } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -20,30 +21,35 @@ const steps = [
     label: { en: "Define claim", zh: "定义主张" },
     shortLabel: { en: "Define", zh: "定义" },
     href: "/investigations",
+    kind: "workflow",
   },
   {
     id: "live",
     label: { en: "Role inquiry", zh: "角色调查" },
     shortLabel: { en: "Inquire", zh: "调查" },
     href: "/investigations/workbench",
+    kind: "workflow",
   },
   {
     id: "findings",
     label: { en: "Evidence ledger", zh: "证据账本" },
     shortLabel: { en: "Evidence", zh: "证据" },
     href: "/investigations/evidence",
+    kind: "workflow",
   },
   {
     id: "actions",
     label: { en: "Next actions", zh: "下一步" },
     shortLabel: { en: "Follow up", zh: "跟进" },
     href: "/investigations/next",
+    kind: "workflow",
   },
   {
     id: "report",
-    label: { en: "Report sample", zh: "报告样张" },
-    shortLabel: { en: "Report", zh: "报告" },
-    href: "/investigations/simulation/report",
+    label: { en: "Simulation and report sample", zh: "模拟与报告样张" },
+    shortLabel: { en: "Demo lab", zh: "演示实验" },
+    href: "/investigations/simulation",
+    kind: "sample",
   },
 ] as const;
 
@@ -77,6 +83,7 @@ export function WorkspaceShell({
 }) {
   const { choose } = useI18n();
   const { record, isHydrated } = useInvestigation();
+  const workflowNavRef = useRef<HTMLElement>(null);
   const isSimulation = activeStep === "simulation";
   const localized = (copy: BilingualCopy) => choose(copy.en, copy.zh);
   const disclosure = disclosureOverride
@@ -90,9 +97,34 @@ export function WorkspaceShell({
     : record?.runtime.storage === "volatile_server"
       ? choose("Temporary server ledger", "临时服务端账本")
       : choose("Browser evidence ledger", "浏览器证据账本");
+  const storageShortLabel = storageLabelOverride
+    ? choose("No writes", "不写入")
+    : record?.runtime.storage === "volatile_server"
+      ? choose("Temp server", "临时服务端")
+      : choose("Local ledger", "本地账本");
+
+  useEffect(() => {
+    const nav = workflowNavRef.current;
+    const activeLink = nav?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (
+      !nav ||
+      !activeLink ||
+      !window.matchMedia("(max-width: 960px)").matches
+    ) {
+      return;
+    }
+
+    const behavior = window.matchMedia("(prefers-reduced-motion: reduce)")
+      .matches
+      ? "auto"
+      : "smooth";
+    const targetLeft =
+      activeLink.offsetLeft - (nav.clientWidth - activeLink.clientWidth) / 2;
+    nav.scrollTo({ behavior, left: Math.max(0, targetLeft) });
+  }, [activeStep]);
 
   return (
-    <main className="workspace" id="main-content">
+    <main className="workspace">
       <header className="workspace-homebar">
         <div className="workspace-homebar-brand">
           <Brand />
@@ -117,18 +149,26 @@ export function WorkspaceShell({
         <nav
           className="workspace-homebar-nav"
           aria-label={choose("Investigation workflow", "调查工作流")}
+          ref={workflowNavRef}
         >
           {steps.map((step, index) => {
-            const isActive = step.id === activeStep;
+            const isActive =
+              step.id === activeStep ||
+              (step.kind === "sample" &&
+                (activeStep === "simulation" || activeStep === "report"));
             return (
               <Link
                 aria-current={isActive ? "page" : undefined}
                 aria-label={choose(step.label.en, step.label.zh)}
-                className={isActive ? "active" : ""}
+                className={`${step.kind === "sample" ? "sample" : ""}${isActive ? " active" : ""}`.trim()}
                 href={step.href}
                 key={step.id}
               >
-                <span>{String(index + 1).padStart(2, "0")}</span>
+                <span>
+                  {step.kind === "sample"
+                    ? choose("DEMO", "样张")
+                    : String(index + 1).padStart(2, "0")}
+                </span>
                 <strong>{choose(step.shortLabel.en, step.shortLabel.zh)}</strong>
               </Link>
             );
@@ -138,7 +178,7 @@ export function WorkspaceShell({
         <div className="workspace-homebar-actions">
           <span className="workspace-storage-state" title={storageLabel}>
             <Locked size={13} aria-hidden />
-            {choose("Local", "本地")}
+            {storageShortLabel}
           </span>
           <LanguageToggle compact />
           <Link className="exit-link" href="/">
@@ -174,7 +214,14 @@ export function WorkspaceShell({
         </div>
       </section>
 
-      <section className="workspace-viewport">{children}</section>
+      <section
+        aria-label={choose("Investigation workspace", "调查工作区")}
+        className="workspace-viewport"
+        id="main-content"
+        tabIndex={-1}
+      >
+        {children}
+      </section>
     </main>
   );
 }

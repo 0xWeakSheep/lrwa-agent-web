@@ -4,6 +4,52 @@
   "truthBearing": false,
   "generatedByLiveRun": false,
   "ledgerWrite": false,
+  "assumptions": [
+    {
+      "id": "H-01",
+      "label": {
+        "en": "Candidate labels",
+        "zh": "候选标签"
+      },
+      "detail": {
+        "en": "Candidate A and Candidate B are fictional routing labels used only by this specimen. Neither label is mapped to either named real store.",
+        "zh": "候选 A 与候选 B 只是这份样张使用的虚构路径标签，均未映射到页面中提及的任何一家真实门店。"
+      }
+    },
+    {
+      "id": "H-02",
+      "label": {
+        "en": "Identity premise",
+        "zh": "身份前提"
+      },
+      "detail": {
+        "en": "The specimen assumes that the two public store names resolve to separate service points.",
+        "zh": "样张假设两个公开门店名称对应不同服务点。"
+      }
+    },
+    {
+      "id": "H-03",
+      "label": {
+        "en": "Operating premise",
+        "zh": "营业前提"
+      },
+      "detail": {
+        "en": "The specimen assumes fictional Candidate A covers the target weekday morning while Candidate B remains unresolved.",
+        "zh": "样张假设虚构候选 A 覆盖目标工作日上午，候选 B 的时段仍待核验。"
+      }
+    },
+    {
+      "id": "H-04",
+      "label": {
+        "en": "Capacity premise",
+        "zh": "产能前提"
+      },
+      "detail": {
+        "en": "The specimen assumes fictional Candidate A can fulfill 20 drinks before 09:00 after prior-business-day confirmation.",
+        "zh": "样张假设虚构候选 A 在前一工作日完成确认后，可在上午 09:00 前完成 20 杯饮品。"
+      }
+    }
+  ],
   "facts": [
     {
       "id": "F-01",
@@ -31,8 +77,8 @@
         "zh": "示例：部分支持"
       },
       "detail": {
-        "en": "The specimen assumes Store A covers the target weekday morning. Store B remains unresolved.",
-        "zh": "结果样张假设门店 A 覆盖目标工作日上午；门店 B 仍待复核。"
+        "en": "The specimen assumes fictional Candidate A covers the target weekday morning. Candidate B remains unresolved.",
+        "zh": "结果样张假设虚构候选 A 覆盖目标工作日上午；候选 B 仍待复核。"
       }
     },
     {
@@ -46,8 +92,8 @@
         "zh": "示例：有条件"
       },
       "detail": {
-        "en": "The specimen assumes Store A can fulfill 20 drinks before 09:00 when confirmed on the preceding business day.",
-        "zh": "结果样张假设门店 A 在前一工作日完成确认后，可在上午 09:00 前完成 20 杯饮品。"
+        "en": "The specimen assumes fictional Candidate A can fulfill 20 drinks before 09:00 when confirmed on the preceding business day.",
+        "zh": "结果样张假设虚构候选 A 在前一工作日完成确认后，可在上午 09:00 前完成 20 杯饮品。"
       }
     },
     {
@@ -74,8 +120,8 @@
         "zh": "候选路径"
       },
       "detail": {
-        "en": "Use Store A as the conditional first choice in this fictional specimen.",
-        "zh": "在这份虚构样张中，将门店 A 作为有条件首选。"
+        "en": "Use fictional Candidate A as the conditional first choice inside this specimen only.",
+        "zh": "仅在这份虚构样张内部，将候选 A 作为有条件首选。"
       }
     },
     {

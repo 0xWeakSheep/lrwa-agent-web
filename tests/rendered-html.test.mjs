@@ -252,7 +252,10 @@ test("renders a complete prefabricated result without unlocking the real finding
   assert.match(englishHtml, /Conditionally executable/);
   assert.match(englishHtml, /Days to months/);
   assert.match(englishHtml, /The real finding has not been produced/);
-  assert.match(englishHtml, /Store A is the conditional first choice/);
+  assert.match(
+    englishHtml,
+    /Fictional Candidate A is the conditional first choice/,
+  );
   assert.match(englishHtml, /Open complete report/);
   assert.match(englishHtml, /href="\/investigations\/simulation\/report"/);
   assert.match(englishHtml, /data-artifact-kind="illustrative_result"/);
@@ -269,7 +272,7 @@ test("renders a complete prefabricated result without unlocking the real finding
   assert.match(chineseHtml, /示例判断：有条件可执行/);
   assert.match(chineseHtml, /数天至数月/);
   assert.match(chineseHtml, /真实结论尚未产生/);
-  assert.match(chineseHtml, /门店 A 是有条件首选/);
+  assert.match(chineseHtml, /虚构候选 A 是有条件首选/);
   assert.match(chineseHtml, /查看完整报告/);
 
   for (const html of [englishHtml, chineseHtml]) {
@@ -289,6 +292,7 @@ test("renders a complete prefabricated result without unlocking the real finding
   assert.equal(exampleResult.truthBearing, false);
   assert.equal(exampleResult.generatedByLiveRun, false);
   assert.equal(exampleResult.ledgerWrite, false);
+  assert.equal(exampleResult.assumptions.length, 4);
   assert.equal(exampleResult.facts.length, 4);
 });
 
@@ -309,6 +313,17 @@ test("renders the complete illustrative report as its own truth-labelled page", 
   assert.match(englishHtml, /INVESTIGATION DESIGN/);
   assert.match(englishHtml, /SOURCE REGISTER/);
   assert.match(englishHtml, /RESPONSE LOGIC/);
+  assert.match(englishHtml, /href="#report-logic"/);
+  assert.match(englishHtml, /HYPOTHETICAL INPUT REGISTER/);
+  assert.match(englishHtml, /Candidate labels/);
+  assert.match(
+    englishHtml,
+    /Neither label is mapped to either named real store/,
+  );
+  assert.match(
+    englishHtml,
+    /Model inputs only\. Not evidence, replies, or observations/,
+  );
   assert.match(englishHtml, /PERSONA APPENDIX/);
   assert.match(englishHtml, /P-12/);
   assert.match(englishHtml, /Not collected/);
@@ -328,6 +343,12 @@ test("renders the complete illustrative report as its own truth-labelled page", 
   assert.match(chineseHtml, /证据矩阵/);
   assert.match(chineseHtml, /调查方法/);
   assert.match(chineseHtml, /来源登记/);
+  assert.match(chineseHtml, /响应逻辑/);
+  assert.match(chineseHtml, /假设输入登记/);
+  assert.match(
+    chineseHtml,
+    /均未映射到页面中提及的任何一家真实门店/,
+  );
   assert.match(chineseHtml, /询问覆盖明细/);
   assert.match(chineseHtml, /0 条真实证据/);
   assert.match(chineseHtml, /未采集/);

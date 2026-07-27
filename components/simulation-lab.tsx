@@ -256,8 +256,8 @@ function EvidenceGateStage() {
             <span>ILLUSTRATIVE RESULT / PREBUILT DEMO</span>
             <h2>
               {choose(
-                "The walkthrough is complete. The report is ready.",
-                "流程已经走完，完整报告样张已生成。",
+                "The prebuilt report specimen is ready.",
+                "预制完整报告样张已就绪。",
               )}
             </h2>
             <p>
@@ -289,8 +289,8 @@ function EvidenceGateStage() {
             <h3>{choose("Conditionally executable.", "示例判断：有条件可执行。")}</h3>
             <span>
               {choose(
-                "Store A is the conditional first choice in this fictional specimen. Store B remains a fallback pending verification. This says nothing about either real store.",
-                "在这份虚构样张中，门店 A 是有条件首选，门店 B 是待复核备选。这不代表任何真实门店的现实状态。",
+                "Fictional Candidate A is the conditional first choice inside this specimen. Candidate B is a fallback. Neither label maps to either named real store.",
+                "仅在这份样张内部，虚构候选 A 是有条件首选，候选 B 是备选；两个标签均未映射到任何一家真实门店。",
               )}
             </span>
           </div>
@@ -342,12 +342,23 @@ function phaseIndexForId(phaseId?: string) {
 
 function resetSimulationStageScroll() {
   window.requestAnimationFrame(() => {
+    const behavior = window.matchMedia("(prefers-reduced-motion: reduce)")
+      .matches
+      ? "auto"
+      : "smooth";
+    const frame = document.querySelector<HTMLElement>("#simulation-frame");
+
+    if (window.matchMedia("(max-width: 960px)").matches) {
+      frame?.scrollIntoView({ behavior, block: "start" });
+      return;
+    }
+
     document
       .querySelector<HTMLElement>("#simulation-frame .simulation-stage-content")
-      ?.scrollTo({ behavior: "smooth", top: 0 });
+      ?.scrollTo({ behavior, top: 0 });
     document
       .querySelector<HTMLElement>("#simulation-frame .agent-command")
-      ?.scrollTo({ behavior: "smooth", top: 0 });
+      ?.scrollTo({ behavior, top: 0 });
   });
 }
 
@@ -485,6 +496,7 @@ export function SimulationLab({ initialPhaseId }: { initialPhaseId?: string }) {
     if (activePhaseIndex === lastPhaseIndex) {
       setActivePhaseIndex(initialPhaseIndex);
       setRevealedInquiryCount(1);
+      resetSimulationStageScroll();
     }
     setIsPlaying(true);
   }

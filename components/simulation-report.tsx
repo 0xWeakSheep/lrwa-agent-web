@@ -13,6 +13,7 @@ const reportSections = [
   { id: "evidence", en: "Evidence", zh: "证据矩阵" },
   { id: "method", en: "Method", zh: "调查方法" },
   { id: "sources", en: "Sources", zh: "来源登记" },
+  { id: "logic", en: "Logic", zh: "响应逻辑" },
   { id: "appendix", en: "Appendix", zh: "附录" },
 ] as const;
 
@@ -58,7 +59,7 @@ export function SimulationReport() {
           )}
         >
           <div>
-            <span>ILLUSTRATIVE RESULT</span>
+            <span>{choose("ILLUSTRATIVE RESULT", "示例结果")}</span>
             <strong>{choose("PREBUILT DEMO", "预制演示")}</strong>
           </div>
           <p>
@@ -77,7 +78,12 @@ export function SimulationReport() {
 
         <section className="example-report-cover" id="report-summary">
           <div className="example-report-cover-copy">
-            <p>EXECUTIVE FINDING / NOT OBSERVED</p>
+            <p>
+              {choose(
+                "EXECUTIVE FINDING / NOT OBSERVED",
+                "执行摘要 / 未经真实观察",
+              )}
+            </p>
             <h1>
               {choose(
                 "Store identity and bulk pickup feasibility.",
@@ -110,15 +116,15 @@ export function SimulationReport() {
           <header>
             <span>01</span>
             <div>
-              <p>ILLUSTRATIVE DETERMINATION</p>
+              <p>{choose("ILLUSTRATIVE DETERMINATION", "示例判断")}</p>
               <h2>{choose("Conditionally executable.", "示例判断：有条件可执行。")}</h2>
             </div>
           </header>
           <div className="example-report-executive-grid">
             <p>
               {choose(
-                "Under the hypothetical evidence assumptions used by this specimen, Store A is the conditional first choice. Store B remains a fallback until its operating window and order capacity are verified. This is not a statement about either real store.",
-                "在这份报告样张预设的假设性证据条件下，门店 A 是有条件首选。门店 B 在营业时段与接单能力完成核验前只作为备选。这不代表任何真实门店的现实状态。",
+                "Candidate A and Candidate B are fictional labels that are not mapped to either named real store. Under this specimen's hypothetical inputs, Candidate A is the conditional first choice; Candidate B remains a fallback until its operating window and order capacity are verified.",
+                "候选 A 与候选 B 是没有映射到任何一家真实门店的虚构标签。在这份样张的假设输入下，候选 A 是有条件首选；候选 B 在营业时段与接单能力完成核验前只作为备选。",
               )}
             </p>
             <ol>
@@ -132,6 +138,38 @@ export function SimulationReport() {
                 </li>
               ))}
             </ol>
+          </div>
+        </section>
+
+        <section
+          className="example-report-assumptions"
+          aria-labelledby="report-assumptions-title"
+        >
+          <header>
+            <div>
+              <p>{choose("HYPOTHETICAL INPUT REGISTER", "假设输入登记")}</p>
+              <h2 id="report-assumptions-title">
+                {choose("What the specimen assumes", "这份样张预设了什么")}
+              </h2>
+            </div>
+            <span>
+              {choose(
+                "Model inputs only. Not evidence, replies, or observations.",
+                "仅为模型输入，不是证据、回复或真实观察。",
+              )}
+            </span>
+          </header>
+          <div>
+            {exampleResult.assumptions.map((assumption) => (
+              <article key={assumption.id}>
+                <span>{assumption.id}</span>
+                <small>
+                  {choose("HYPOTHETICAL / NOT EVIDENCE", "假设 / 非证据")}
+                </small>
+                <h3>{choose(assumption.label.en, assumption.label.zh)}</h3>
+                <p>{choose(assumption.detail.en, assumption.detail.zh)}</p>
+              </article>
+            ))}
           </div>
         </section>
 
@@ -175,7 +213,14 @@ export function SimulationReport() {
               )}
             </span>
           </header>
-          <div className="example-report-table" role="table">
+          <div
+            aria-label={choose(
+              "Illustrative evidence requirements",
+              "示例证据要求",
+            )}
+            className="example-report-table"
+            role="table"
+          >
             <div className="example-report-table-head" role="row">
               <span role="columnheader">{choose("Gap", "缺口")}</span>
               <span role="columnheader">{choose("Example answer", "示例回答")}</span>
@@ -248,7 +293,12 @@ export function SimulationReport() {
                 <span>{source.id}</span>
                 <div>
                   <h3>{source.label}</h3>
-                  <p>{source.observedText}</p>
+                  <p>
+                    {choose(
+                      `The built-in specimen records this page as a public lead: ${source.observedText}`,
+                      `内置样张仅将该页面登记为公开线索：${source.observedText}`,
+                    )}
+                  </p>
                   <small>{source.boundary}</small>
                 </div>
                 <a href={source.url} rel="noreferrer" target="_blank">
@@ -260,7 +310,10 @@ export function SimulationReport() {
           </div>
         </section>
 
-        <section className="example-report-section example-report-logic">
+        <section
+          className="example-report-section example-report-logic"
+          id="report-logic"
+        >
           <header>
             <div>
               <p>RESPONSE LOGIC</p>
@@ -336,7 +389,12 @@ export function SimulationReport() {
         <section className="example-report-lock">
           <Locked size={26} aria-hidden />
           <div>
-            <p>REAL-WORLD FINDING / STILL LOCKED</p>
+            <p>
+              {choose(
+                "REAL-WORLD FINDING / STILL LOCKED",
+                "现实结论 / 仍未解锁",
+              )}
+            </p>
             <h2>
               {choose(
                 "This report demonstrates form, not truth.",
