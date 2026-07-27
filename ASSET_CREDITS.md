@@ -1,8 +1,8 @@
 # Asset and License Credits
 
-LRWA's product interface, fictional case data, diagrams, copy, narration
-script, screenshots, and motion design were created specifically for this
-OpenArena demo.
+LRWA's product interface, diagrams, copy, screenshots and motion design were
+created specifically for this prototype. The active product starts without
+prefilled investigation results.
 
 ## Original and generated assets
 
@@ -15,8 +15,9 @@ OpenArena demo.
 - `public/lrwa-mark.svg` and `app/icon.svg` adapt the founder-provided LRWA
   symbol for dark-interface and favicon use. The source artwork is
   founder-owned and was supplied directly for this project.
-- Files under `public/materials/` are first-party LRWA demo artifacts produced
-  for this submission.
+- Files under `public/materials/` are current first-party reviewer materials.
+  They describe the product workflow and are not presented as investigation
+  evidence.
 - Product screenshots in the demo film were captured from the LRWA application.
 - The narration is synthesized from an original LRWA script. The film contains
   no third-party music, stock video, or stock photography.
