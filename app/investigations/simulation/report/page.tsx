@@ -15,7 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
     ),
     description: chooseLocale(
       locale,
-      "A complete, truth-labelled example of the report produced after a multi-stage investigation.",
+      "A truth-labelled specimen of the report format intended for use after a multi-stage investigation.",
       "一份完整并明确标注真实性边界的多阶段调查报告样张。",
     ),
   };
