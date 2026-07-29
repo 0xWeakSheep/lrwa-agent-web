@@ -13,7 +13,7 @@ import {
   Play,
   Reset,
 } from "@carbon/icons-react";
-import { AgentMissionControl } from "@/components/agent-mission-control";
+import { InvestigationOperationsBoard } from "@/components/investigation-operations-board";
 import { useI18n } from "@/components/locale-provider";
 import {
   LrwaSignal,
@@ -21,6 +21,7 @@ import {
 } from "@/components/lrwa-signal";
 import { localizeScenario } from "@/lib/simulation-copy";
 import exampleResult from "@/lib/simulation-example-result.json";
+import { simulationOperations } from "@/lib/simulation-operations";
 import scenario from "@/lib/simulation-scenario.json";
 
 const lastPhaseIndex = scenario.phases.length - 1;
@@ -202,16 +203,16 @@ function PersonaCohortStage() {
 
 function InquiryWaveStage({
   onAdvance,
-  revealedInquiryCount,
+  revealedOperationCount,
 }: {
   onAdvance: () => void;
-  revealedInquiryCount: number;
+  revealedOperationCount: number;
 }) {
   return (
     <div className="simulation-stage-content agent-field-stage">
-      <AgentMissionControl
+      <InvestigationOperationsBoard
         onAdvance={onAdvance}
-        revealedCount={revealedInquiryCount}
+        revealedCount={revealedOperationCount}
       />
     </div>
   );
@@ -400,11 +401,11 @@ function resetSimulationStageScroll() {
 function SimulationStage({
   onAdvance,
   phaseId,
-  revealedInquiryCount,
+  revealedOperationCount,
 }: {
   onAdvance: () => void;
   phaseId: string;
-  revealedInquiryCount: number;
+  revealedOperationCount: number;
 }) {
   switch (phaseId) {
     case "decompose":
@@ -415,7 +416,7 @@ function SimulationStage({
       return (
         <InquiryWaveStage
           onAdvance={onAdvance}
-          revealedInquiryCount={revealedInquiryCount}
+          revealedOperationCount={revealedOperationCount}
         />
       );
     case "branches":
@@ -433,11 +434,11 @@ export function SimulationLab({ initialPhaseId }: { initialPhaseId?: string }) {
   const initialPhaseIndex = phaseIndexForId(initialPhaseId);
   const [activePhaseIndex, setActivePhaseIndex] = useState(initialPhaseIndex);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [revealedInquiryCount, setRevealedInquiryCount] = useState(1);
+  const [revealedOperationCount, setRevealedOperationCount] = useState(1);
   const activePhase = localizedScenario.phases[activePhaseIndex];
   const isInquiryPhase = activePhase.id === "inquiries";
-  const hasMoreInquiries =
-    isInquiryPhase && revealedInquiryCount < scenario.personas.length;
+  const hasMoreOperations =
+    isInquiryPhase && revealedOperationCount < simulationOperations.length;
   const nextPhase = localizedScenario.phases[activePhaseIndex + 1];
 
   useEffect(() => {
@@ -452,15 +453,17 @@ export function SimulationLab({ initialPhaseId }: { initialPhaseId?: string }) {
       () => {
         if (
           activePhase.id === "inquiries" &&
-          revealedInquiryCount < scenario.personas.length
+          revealedOperationCount < simulationOperations.length
         ) {
-          const nextPersona = scenario.personas[revealedInquiryCount];
-          setRevealedInquiryCount((current) =>
-            Math.min(current + 1, scenario.personas.length),
+          const nextOperation = simulationOperations[revealedOperationCount];
+          setRevealedOperationCount((current) =>
+            Math.min(current + 1, simulationOperations.length),
           );
           window.requestAnimationFrame(() => {
             document
-              .getElementById(`simulation-inquiry-${nextPersona.id}`)
+              .getElementById(
+                `simulation-inquiry-${nextOperation.agentId}`,
+              )
               ?.scrollIntoView({ block: "center" });
           });
           return;
@@ -477,7 +480,7 @@ export function SimulationLab({ initialPhaseId }: { initialPhaseId?: string }) {
     );
 
     return () => window.clearTimeout(timer);
-  }, [activePhase.id, activePhaseIndex, isPlaying, revealedInquiryCount]);
+  }, [activePhase.id, activePhaseIndex, isPlaying, revealedOperationCount]);
 
   function selectPhase(index: number) {
     setIsPlaying(false);
@@ -485,27 +488,27 @@ export function SimulationLab({ initialPhaseId }: { initialPhaseId?: string }) {
     resetSimulationStageScroll();
   }
 
-  function showNextInquiry() {
-    const nextPersona = scenario.personas[revealedInquiryCount];
-    setRevealedInquiryCount((current) =>
-      Math.min(current + 1, scenario.personas.length),
+  function showNextOperation() {
+    const nextOperation = simulationOperations[revealedOperationCount];
+    setRevealedOperationCount((current) =>
+      Math.min(current + 1, simulationOperations.length),
     );
     window.requestAnimationFrame(() => {
       document
-        .getElementById(`simulation-inquiry-${nextPersona.id}`)
+        .getElementById(`simulation-inquiry-${nextOperation.agentId}`)
         ?.scrollIntoView({ block: "center" });
     });
   }
 
   function advance() {
     setIsPlaying(false);
-    if (hasMoreInquiries) {
-      showNextInquiry();
+    if (hasMoreOperations) {
+      showNextOperation();
       return;
     }
     if (activePhaseIndex === lastPhaseIndex) {
       setActivePhaseIndex(initialPhaseIndex);
-      setRevealedInquiryCount(1);
+      setRevealedOperationCount(1);
       resetSimulationStageScroll();
       return;
     }
@@ -515,8 +518,8 @@ export function SimulationLab({ initialPhaseId }: { initialPhaseId?: string }) {
 
   function retreat() {
     setIsPlaying(false);
-    if (isInquiryPhase && revealedInquiryCount > 1) {
-      setRevealedInquiryCount((current) => Math.max(current - 1, 1));
+    if (isInquiryPhase && revealedOperationCount > 1) {
+      setRevealedOperationCount((current) => Math.max(current - 1, 1));
       return;
     }
     setActivePhaseIndex((current) => Math.max(current - 1, 0));
@@ -530,7 +533,7 @@ export function SimulationLab({ initialPhaseId }: { initialPhaseId?: string }) {
     }
     if (activePhaseIndex === lastPhaseIndex) {
       setActivePhaseIndex(initialPhaseIndex);
-      setRevealedInquiryCount(1);
+      setRevealedOperationCount(1);
       resetSimulationStageScroll();
     }
     setIsPlaying(true);
@@ -539,7 +542,7 @@ export function SimulationLab({ initialPhaseId }: { initialPhaseId?: string }) {
   function resetPlayback() {
     setIsPlaying(false);
     setActivePhaseIndex(initialPhaseIndex);
-    setRevealedInquiryCount(1);
+    setRevealedOperationCount(1);
     resetSimulationStageScroll();
   }
 
@@ -583,10 +586,24 @@ export function SimulationLab({ initialPhaseId }: { initialPhaseId?: string }) {
                 STEP {activePhase.code} /{" "}
                 {String(scenario.phases.length).padStart(2, "0")} ·{" "}
                 {activePhase.label}
+                {isInquiryPhase
+                  ? ` · OP ${String(revealedOperationCount).padStart(
+                      2,
+                      "0",
+                    )}/${simulationOperations.length}`
+                  : ""}
               </strong>
               <small>
                 {isPlaying
-                  ? choose("Replaying the local experiment", "正在回放本地实验")
+                  ? isInquiryPhase
+                    ? choose(
+                        "Replaying hardcoded field operations",
+                        "正在回放硬编码调查动作",
+                      )
+                    : choose(
+                        "Replaying the local experiment",
+                        "正在回放本地实验",
+                      )
                   : choose("Waiting for user control", "等待用户控制")}
               </small>
             </div>
@@ -627,7 +644,7 @@ export function SimulationLab({ initialPhaseId }: { initialPhaseId?: string }) {
               className="simulation-compact-control"
               disabled={
                 activePhaseIndex === 0 &&
-                (!isInquiryPhase || revealedInquiryCount === 1)
+                (!isInquiryPhase || revealedOperationCount === 1)
               }
               onClick={retreat}
               title={choose("Previous step", "上一步")}
@@ -655,23 +672,23 @@ export function SimulationLab({ initialPhaseId }: { initialPhaseId?: string }) {
             </button>
             <button
               aria-label={
-                hasMoreInquiries
-                  ? choose("Next inquiry", "下一个询问")
+                hasMoreOperations
+                  ? choose("Next operation", "下一操作")
                   : choose("Next step", "下一步")
               }
               className="simulation-compact-control"
               disabled={activePhaseIndex === lastPhaseIndex}
               onClick={advance}
               title={
-                hasMoreInquiries
-                  ? choose("Next inquiry", "下一个询问")
+                hasMoreOperations
+                  ? choose("Next operation", "下一操作")
                   : choose("Next step", "下一步")
               }
               type="button"
             >
               <span>
-                {hasMoreInquiries
-                  ? choose("Next inquiry", "下一个询问")
+                {hasMoreOperations
+                  ? choose("Next operation", "下一操作")
                   : choose("Next step", "下一步")}
               </span>
               <ChevronRight size={17} aria-hidden />
@@ -743,7 +760,7 @@ export function SimulationLab({ initialPhaseId }: { initialPhaseId?: string }) {
           <SimulationStage
             onAdvance={advance}
             phaseId={activePhase.id}
-            revealedInquiryCount={revealedInquiryCount}
+            revealedOperationCount={revealedOperationCount}
           />
           {!isInquiryPhase && (
             <footer className="simulation-stage-navigation">

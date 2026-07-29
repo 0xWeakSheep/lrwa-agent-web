@@ -473,6 +473,23 @@ test("server-renders the bilingual sandbox with explicit zero-action state", asy
   assert.match(chineseHtml, /播放全过程/);
   assert.match(chineseHtml, /结论锁定/);
 
+  const operationsHtml = await renderedHtml(
+    "/investigations/simulation?start=inquiries",
+  );
+  assert.match(operationsHtml, /FIELD OPERATIONS/);
+  assert.match(operationsHtml, /HARDCODED SANDBOX/);
+  assert.match(
+    operationsHtml,
+    /Watch the investigation move, not just the final answer/,
+  );
+  assert.match(operationsHtml, /Operation types/);
+  assert.match(operationsHtml, /SEARCH/);
+  assert.match(operationsHtml, /INSPECT/);
+  assert.match(operationsHtml, /LOAD ROLE/);
+  assert.match(operationsHtml, /ROUTE/);
+  assert.match(operationsHtml, /data-hardcoded-replay="true"/);
+  assert.match(operationsHtml, /data-network-actions="0"/);
+
   for (const html of [englishHtml, chineseHtml]) {
     assert.match(html, /aria-live="polite"/);
     assert.match(html, /data-environment="sandbox"/);
@@ -779,6 +796,7 @@ test("keeps the simulation isolated from contact and evidence writes", async () 
   const [
     source,
     agentFieldSource,
+    operationsSource,
     localizedCopySource,
     exampleResultSource,
     styles,
@@ -789,7 +807,14 @@ test("keeps the simulation isolated from contact and evidence writes", async () 
         "utf8",
       ),
       readFile(
-        new URL("../components/agent-mission-control.tsx", import.meta.url),
+        new URL(
+          "../components/investigation-operations-board.tsx",
+          import.meta.url,
+        ),
+        "utf8",
+      ),
+      readFile(
+        new URL("../lib/simulation-operations.ts", import.meta.url),
         "utf8",
       ),
       readFile(new URL("../lib/simulation-copy.ts", import.meta.url), "utf8"),
@@ -801,6 +826,16 @@ test("keeps the simulation isolated from contact and evidence writes", async () 
     ]);
   await access(
     new URL("../public/lrwa-agent-field-map-bg.webp", import.meta.url),
+  );
+  await Promise.all(
+    Array.from({ length: 6 }, (_, index) =>
+      access(
+        new URL(
+          `../public/pixel-agents/char_${index}.png`,
+          import.meta.url,
+        ),
+      ),
+    ),
   );
   const investigationSource = await readFile(
     new URL("../lib/investigation.ts", import.meta.url),
@@ -816,22 +851,25 @@ test("keeps the simulation isolated from contact and evidence writes", async () 
   );
 
   assert.doesNotMatch(
-    `${source}\n${agentFieldSource}\n${localizedCopySource}\n${exampleResultSource}`,
+    `${source}\n${agentFieldSource}\n${operationsSource}\n${localizedCopySource}\n${exampleResultSource}`,
     /addServerEvidence|confirmServerContact|createServerInvestigation|hashEvidencePayload|fetch\(|WebSocket|sendBeacon/,
   );
   assert.match(source, /aria-pressed=\{isPlaying\}/);
   assert.match(source, /aria-current=\{index === activePhaseIndex/);
   assert.match(source, /type="button"/);
-  assert.match(source, /hasMoreInquiries/);
-  assert.match(source, /AgentMissionControl/);
+  assert.match(source, /hasMoreOperations/);
+  assert.match(source, /InvestigationOperationsBoard/);
   assert.match(agentFieldSource, /data-network-actions="0"/);
+  assert.match(agentFieldSource, /data-hardcoded-replay="true"/);
   assert.match(agentFieldSource, /localizedScenario\.personas\.map/);
-  assert.match(agentFieldSource, /scenario\.personas\.flatMap/);
+  assert.match(agentFieldSource, /simulationStations\.map/);
+  assert.match(agentFieldSource, /simulationOperations\.some/);
   assert.match(agentFieldSource, /\/lrwa-agent-field-map-bg\.webp/);
-  assert.match(agentFieldSource, /function AgentFieldCanvas/);
+  assert.match(agentFieldSource, /\/pixel-agents\/char_/);
+  assert.match(agentFieldSource, /function InvestigationRouteCanvas/);
   assert.match(
     agentFieldSource,
-    /<canvas[\s\S]*aria-hidden="true"[\s\S]*agent-topology-canvas/,
+    /<canvas[\s\S]*aria-hidden="true"[\s\S]*investigation-route-canvas/,
   );
   assert.match(agentFieldSource, /new ResizeObserver/);
   assert.match(agentFieldSource, /new IntersectionObserver/);
@@ -842,13 +880,25 @@ test("keeps the simulation isolated from contact and evidence writes", async () 
   assert.match(agentFieldSource, /prefers-reduced-motion: reduce/);
   assert.match(agentFieldSource, /requestAnimationFrame/);
   assert.match(agentFieldSource, /cancelAnimationFrame/);
-  assert.match(styles, /\.agent-topology-canvas/);
+  assert.match(styles, /\.investigation-route-canvas/);
+  assert.match(styles, /\.field-agent-sprite/);
   assert.match(styles, /\/lrwa-role-orchestration-bg\.webp/);
   assert.match(agentFieldSource, /aria-pressed=\{isSelected\}/);
-  assert.match(agentFieldSource, /Next agent/);
-  assert.match(agentFieldSource, /下一个 Agent/);
+  assert.match(agentFieldSource, /Next operation/);
+  assert.match(agentFieldSource, /下一操作/);
   assert.match(agentFieldSource, /Disabled · 0 sends/);
   assert.match(agentFieldSource, /禁用 · 0 次发送/);
+  assert.equal(
+    [...operationsSource.matchAll(/synthetic: true,/g)].length,
+    16,
+  );
+  assert.equal(
+    [...operationsSource.matchAll(/networkAction: false,/g)].length,
+    16,
+  );
+  assert.doesNotMatch(operationsSource, /networkAction: true/);
+  assert.match(operationsSource, /NOT EXECUTED/);
+  assert.match(operationsSource, /CONCLUSION LOCKED/);
   assert.match(localizedCopySource, /simulationEnglishCopy/);
   assert.match(localizedCopySource, /localizeScenario/);
   assert.match(localizedCopySource, /builtInSourceNote/);
@@ -904,6 +954,7 @@ test("keeps truthful state boundaries in the active product source", async () =>
       "../components/simulation-lab.tsx",
       "../components/simulation-report.tsx",
       "../components/agent-mission-control.tsx",
+      "../components/investigation-operations-board.tsx",
       "../components/locale-provider.tsx",
       "../components/language-toggle.tsx",
       "../lib/i18n.ts",
@@ -913,6 +964,7 @@ test("keeps truthful state boundaries in the active product source", async () =>
       "../lib/use-investigation.ts",
       "../lib/simulation-copy.ts",
       "../lib/simulation-example-result.json",
+      "../lib/simulation-operations.ts",
       "../lib/simulation-scenario.json",
     ].map((path) => readFile(new URL(path, import.meta.url), "utf8")),
   );
