@@ -36,16 +36,30 @@ import {
   type SimulationSpriteMode,
   type SimulationStationId,
   simulationOperationKindLabels,
+  simulationOperationsPerWave,
+  simulationOperationWaveCount,
   simulationOperations,
   simulationStationById,
   simulationStations,
 } from "@/lib/simulation-operations";
 
-type FieldAgentState = "active" | "complete" | "queued";
+type FieldAgentState = "active" | "complete" | "queued" | "working";
+type FieldAgentFacing = "down" | "left" | "right" | "up";
 
 type FieldPosition = Readonly<{
   x: number;
   y: number;
+}>;
+
+type CanvasPoint = Readonly<{
+  x: number;
+  y: number;
+}>;
+
+type RouteCurve = Readonly<{
+  control: CanvasPoint;
+  from: CanvasPoint;
+  to: CanvasPoint;
 }>;
 
 const operationIconByKind = {
@@ -97,6 +111,9 @@ const standbyPositions: readonly FieldPosition[] = Array.from(
 );
 
 const spriteSheetCount = 6;
+const agentTravelDurationMs = 2400;
+const agentTravelLeadInMs = 650;
+const agentTravelStaggerMs = 260;
 
 function latestOperationForAgent(agentId: string, activeIndex: number) {
   for (let index = activeIndex; index >= 0; index -= 1) {
@@ -120,27 +137,79 @@ function nextOperationForAgent(agentId: string, activeIndex: number) {
   return null;
 }
 
-function fieldStateForAgent(agentId: string, activeIndex: number) {
-  if (simulationOperations[activeIndex]?.agentId === agentId) {
+function previousOperationForAgent(agentId: string, activeIndex: number) {
+  for (let index = activeIndex - 1; index >= 0; index -= 1) {
+    if (simulationOperations[index]?.agentId === agentId) {
+      return { index, operation: simulationOperations[index] };
+    }
+  }
+  return null;
+}
+
+function operationWaveRecords(waveStartIndex: number) {
+  return simulationOperations
+    .slice(waveStartIndex, waveStartIndex + simulationOperationsPerWave)
+    .map((operation, offset) => ({
+      index: waveStartIndex + offset,
+      operation,
+    }));
+}
+
+function concurrentOperationForAgent(
+  agentId: string,
+  waveStartIndex: number,
+) {
+  return (
+    operationWaveRecords(waveStartIndex).find(
+      ({ operation }) => operation.agentId === agentId,
+    ) ?? null
+  );
+}
+
+function previousWaveRecords(waveStartIndex: number) {
+  const segmentIndex = Math.floor(
+    waveStartIndex / simulationOperationsPerWave,
+  );
+  if (
+    waveStartIndex < simulationOperationsPerWave ||
+    segmentIndex % 2 === 0
+  ) {
+    return [];
+  }
+  return operationWaveRecords(
+    waveStartIndex - simulationOperationsPerWave,
+  );
+}
+
+function workingOperationForAgent(
+  agentId: string,
+  waveStartIndex: number,
+) {
+  return (
+    previousWaveRecords(waveStartIndex).find(
+      ({ operation }) => operation.agentId === agentId,
+    ) ?? null
+  );
+}
+
+function fieldStateForAgent(agentId: string, waveStartIndex: number) {
+  if (concurrentOperationForAgent(agentId, waveStartIndex)) {
     return "active" as const;
   }
-  if (latestOperationForAgent(agentId, activeIndex)) {
+  if (workingOperationForAgent(agentId, waveStartIndex)) {
+    return "working" as const;
+  }
+  if (latestOperationForAgent(agentId, waveStartIndex - 1)) {
     return "complete" as const;
   }
   return "queued" as const;
 }
 
-function positionForAgent(
-  agentId: string,
+function stationPositionForAgent(
+  stationId: SimulationStationId,
   agentIndex: number,
-  activeIndex: number,
 ) {
-  const latestOperation = latestOperationForAgent(agentId, activeIndex);
-  if (!latestOperation) {
-    return standbyPositions[agentIndex];
-  }
-
-  const station = simulationStationById(latestOperation.operation.stationId);
+  const station = simulationStationById(stationId);
   const offset = stationOffsets[agentIndex % stationOffsets.length];
   return {
     x: station.x + offset.x,
@@ -148,21 +217,153 @@ function positionForAgent(
   };
 }
 
+function operationAgentIndex(operation: SimulationOperation) {
+  const numericId = Number(operation.agentId.replace("P-", ""));
+  return Math.max(0, Math.min(standbyPositions.length - 1, numericId - 1));
+}
+
+function operationOriginPosition(operationIndex: number) {
+  const operation = simulationOperations[operationIndex];
+  const agentIndex = operationAgentIndex(operation);
+  const previousOperation = previousOperationForAgent(
+    operation.agentId,
+    operationIndex,
+  );
+
+  return previousOperation
+    ? stationPositionForAgent(previousOperation.operation.stationId, agentIndex)
+    : standbyPositions[agentIndex];
+}
+
+function operationDestinationPosition(operationIndex: number) {
+  const operation = simulationOperations[operationIndex];
+  return stationPositionForAgent(
+    operation.stationId,
+    operationAgentIndex(operation),
+  );
+}
+
+function positionForAgent(
+  agentId: string,
+  agentIndex: number,
+  waveStartIndex: number,
+) {
+  const concurrentOperation = concurrentOperationForAgent(
+    agentId,
+    waveStartIndex,
+  );
+  if (concurrentOperation) {
+    return operationDestinationPosition(concurrentOperation.index);
+  }
+
+  const latestOperation = latestOperationForAgent(
+    agentId,
+    waveStartIndex - 1,
+  );
+  if (!latestOperation) {
+    return standbyPositions[agentIndex];
+  }
+
+  return stationPositionForAgent(
+    latestOperation.operation.stationId,
+    agentIndex,
+  );
+}
+
+function facingForAgent(
+  agentId: string,
+  waveStartIndex: number,
+  state: FieldAgentState,
+): FieldAgentFacing {
+  if (state !== "active") {
+    return "down";
+  }
+
+  const operationRecord = concurrentOperationForAgent(
+    agentId,
+    waveStartIndex,
+  );
+  if (!operationRecord) {
+    return "down";
+  }
+
+  const from = operationOriginPosition(operationRecord.index);
+  const to = operationDestinationPosition(operationRecord.index);
+  const deltaX = to.x - from.x;
+  const deltaY = to.y - from.y;
+
+  if (Math.abs(deltaX) > Math.abs(deltaY)) {
+    return deltaX < 0 ? "left" : "right";
+  }
+  return deltaY < 0 ? "up" : "down";
+}
+
 function spriteClass(
   state: FieldAgentState,
   activeMode: SimulationSpriteMode,
 ) {
+  if (state === "working") {
+    return `sprite-work-${activeMode}`;
+  }
   if (state !== "active") {
     return "sprite-idle";
   }
   return `sprite-${activeMode}`;
 }
 
-function routePoint(stationId: SimulationStationId, width: number, height: number) {
-  const station = simulationStationById(stationId);
+function routePoint(position: FieldPosition, width: number, height: number) {
   return {
-    x: (station.x / 100) * width,
-    y: (station.y / 100) * height,
+    x: (position.x / 100) * width,
+    y: (position.y / 100) * height,
+  };
+}
+
+function routeCurve(
+  from: CanvasPoint,
+  to: CanvasPoint,
+  operationIndex: number,
+): RouteCurve {
+  const deltaX = to.x - from.x;
+  const deltaY = to.y - from.y;
+  const distance = Math.max(1, Math.hypot(deltaX, deltaY));
+  const direction = operationIndex % 2 === 0 ? 1 : -1;
+  const bend = Math.min(52, Math.max(16, distance * 0.11)) * direction;
+
+  return {
+    from,
+    to,
+    control: {
+      x: (from.x + to.x) / 2 - (deltaY / distance) * bend,
+      y: (from.y + to.y) / 2 + (deltaX / distance) * bend,
+    },
+  };
+}
+
+function traceRoute(
+  context: CanvasRenderingContext2D,
+  curve: RouteCurve,
+) {
+  context.beginPath();
+  context.moveTo(curve.from.x, curve.from.y);
+  context.quadraticCurveTo(
+    curve.control.x,
+    curve.control.y,
+    curve.to.x,
+    curve.to.y,
+  );
+}
+
+function pointOnRoute(curve: RouteCurve, progress: number) {
+  const inverse = 1 - progress;
+  return {
+    x:
+      inverse * inverse * curve.from.x +
+      2 * inverse * progress * curve.control.x +
+      progress * progress * curve.to.x,
+    y:
+      inverse * inverse * curve.from.y +
+      2 * inverse * progress * curve.control.y +
+      progress * progress * curve.to.y,
   };
 }
 
@@ -174,10 +375,12 @@ function InvestigationRouteCanvas({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawRef = useRef<((timestamp: number) => void) | null>(null);
   const activeIndexRef = useRef(activeOperationIndex);
+  const operationStartedAtRef = useRef(0);
 
   useEffect(() => {
     activeIndexRef.current = activeOperationIndex;
-    drawRef.current?.(performance.now());
+    operationStartedAtRef.current = performance.now();
+    drawRef.current?.(operationStartedAtRef.current);
   }, [activeOperationIndex]);
 
   useEffect(() => {
@@ -227,76 +430,129 @@ function InvestigationRouteCanvas({
       }
 
       const activeIndex = activeIndexRef.current;
-      for (let index = 1; index < simulationOperations.length; index += 1) {
-        const from = routePoint(
-          simulationOperations[index - 1].stationId,
-          width,
-          height,
+      const historyStart = Math.max(0, activeIndex - 7);
+      for (let index = historyStart; index < activeIndex; index += 1) {
+        const historyCurve = routeCurve(
+          routePoint(operationOriginPosition(index), width, height),
+          routePoint(operationDestinationPosition(index), width, height),
+          index,
         );
-        const to = routePoint(
-          simulationOperations[index].stationId,
-          width,
-          height,
-        );
-        if (from.x === to.x && from.y === to.y) {
-          continue;
-        }
-
-        const isComplete = index <= activeIndex;
-        const isCurrent = index === activeIndex;
-        context2d.strokeStyle = isCurrent
-          ? "rgba(255, 107, 53, 0.82)"
-          : isComplete
-            ? "rgba(181, 153, 74, 0.28)"
-            : "rgba(214, 205, 181, 0.07)";
-        context2d.lineWidth = isCurrent ? 1.35 : 0.75;
-        context2d.setLineDash(
-          isCurrent ? [6, 6] : isComplete ? [] : [2, 7],
-        );
-        context2d.beginPath();
-        context2d.moveTo(from.x, from.y);
-        context2d.lineTo(to.x, to.y);
+        context2d.strokeStyle = `rgba(181, 153, 74, ${
+          0.07 + ((index - historyStart + 1) / 8) * 0.12
+        })`;
+        context2d.lineWidth = index === activeIndex - 1 ? 1 : 0.7;
+        context2d.setLineDash(index === activeIndex - 1 ? [] : [2, 8]);
+        traceRoute(context2d, historyCurve);
         context2d.stroke();
       }
-      context2d.setLineDash([]);
 
-      const currentOperation = simulationOperations[activeIndex];
-      const previousOperation = simulationOperations[Math.max(0, activeIndex - 1)];
-      const from = routePoint(previousOperation.stationId, width, height);
-      const to = routePoint(currentOperation.stationId, width, height);
-      const progress = prefersReducedMotion
-        ? 1
-        : (timestamp / 1800) % 1;
-      const easedProgress =
-        progress * progress * (3 - 2 * progress);
-      const pulseX = from.x + (to.x - from.x) * easedProgress;
-      const pulseY = from.y + (to.y - from.y) * easedProgress;
+      const currentWave = operationWaveRecords(activeIndex);
+      const routeColors = [
+        {
+          line: "rgba(255, 107, 53, 0.72)",
+          point: "#ff6b35",
+          shadow: "rgba(255, 107, 53, 0.42)",
+        },
+        {
+          line: "rgba(221, 183, 96, 0.58)",
+          point: "#d8b35f",
+          shadow: "rgba(216, 179, 95, 0.28)",
+        },
+        {
+          line: "rgba(214, 205, 181, 0.44)",
+          point: "#c7bfa9",
+          shadow: "rgba(199, 191, 169, 0.22)",
+        },
+        {
+          line: "rgba(167, 142, 88, 0.52)",
+          point: "#a78e58",
+          shadow: "rgba(167, 142, 88, 0.24)",
+        },
+      ] as const;
 
-      context2d.fillStyle = "rgba(255, 107, 53, 0.9)";
-      context2d.shadowBlur = 18;
-      context2d.shadowColor = "rgba(255, 107, 53, 0.48)";
-      context2d.beginPath();
-      context2d.arc(pulseX, pulseY, 2.3, 0, Math.PI * 2);
-      context2d.fill();
-      context2d.shadowBlur = 0;
+      currentWave.forEach(({ index, operation }, waveOrder) => {
+        const currentCurve = routeCurve(
+          routePoint(operationOriginPosition(index), width, height),
+          routePoint(operationDestinationPosition(index), width, height),
+          index,
+        );
+        const travelDuration = agentTravelDurationMs;
+        const elapsed = Math.max(
+          0,
+          timestamp -
+            operationStartedAtRef.current -
+            (prefersReducedMotion
+              ? 0
+              : agentTravelLeadInMs + waveOrder * agentTravelStaggerMs),
+        );
+        const travelProgress = prefersReducedMotion
+          ? 1
+          : Math.min(1, elapsed / travelDuration);
+        const easedProgress =
+          travelProgress * travelProgress * (3 - 2 * travelProgress);
+        const routeColor = routeColors[waveOrder % routeColors.length];
 
-      const activeStation = routePoint(currentOperation.stationId, width, height);
-      const ringProgress = prefersReducedMotion
-        ? 0.35
-        : (timestamp / 2400) % 1;
-      context2d.strokeStyle = `rgba(255, 107, 53, ${
-        0.32 * (1 - ringProgress)
-      })`;
-      context2d.lineWidth = 1;
-      context2d.beginPath();
-      context2d.arc(
-        activeStation.x,
-        activeStation.y,
-        20 + ringProgress * 42,
-        0,
-        Math.PI * 2,
-      );
-      context2d.stroke();
+        context2d.strokeStyle = routeColor.line;
+        context2d.lineWidth = waveOrder === 0 ? 1.35 : 0.95;
+        context2d.setLineDash(waveOrder === 0 ? [8, 7] : [3, 8]);
+        context2d.lineDashOffset = prefersReducedMotion
+          ? 0
+          : -elapsed * (waveOrder === 0 ? 0.008 : 0.0055);
+        traceRoute(context2d, currentCurve);
+        context2d.stroke();
+        context2d.setLineDash([]);
+        context2d.lineDashOffset = 0;
+
+        for (let trailIndex = 4; trailIndex >= 0; trailIndex -= 1) {
+          const trailProgress = Math.max(
+            0,
+            easedProgress - trailIndex * 0.035,
+          );
+          const trailPoint = pointOnRoute(currentCurve, trailProgress);
+          context2d.globalAlpha =
+            (1 - trailIndex / 5) * (waveOrder === 0 ? 0.9 : 0.67);
+          context2d.fillStyle = routeColor.point;
+          context2d.shadowBlur =
+            trailIndex === 0 ? (waveOrder === 0 ? 17 : 10) : 4;
+          context2d.shadowColor = routeColor.shadow;
+          context2d.beginPath();
+          context2d.arc(
+            trailPoint.x,
+            trailPoint.y,
+            trailIndex === 0 ? (waveOrder === 0 ? 2.8 : 2.1) : 1.15,
+            0,
+            Math.PI * 2,
+          );
+          context2d.fill();
+        }
+        context2d.globalAlpha = 1;
+        context2d.shadowBlur = 0;
+
+        const activeStation = simulationStationById(operation.stationId);
+        const activeStationPoint = routePoint(activeStation, width, height);
+        const ringElapsed = Math.max(0, elapsed - travelDuration);
+        const ringProgress = prefersReducedMotion
+          ? 0.35
+          : (ringElapsed / (2600 + waveOrder * 180)) % 1;
+        const ringAlpha =
+          travelProgress < 1
+            ? 0.09
+            : (waveOrder === 0 ? 0.34 : 0.2) * (1 - ringProgress);
+        context2d.strokeStyle =
+          waveOrder === 0
+            ? `rgba(255, 107, 53, ${ringAlpha})`
+            : `rgba(218, 190, 121, ${ringAlpha})`;
+        context2d.lineWidth = waveOrder === 0 ? 1 : 0.75;
+        context2d.beginPath();
+        context2d.arc(
+          activeStationPoint.x,
+          activeStationPoint.y,
+          16 + ringProgress * (waveOrder === 0 ? 46 : 34),
+          0,
+          Math.PI * 2,
+        );
+        context2d.stroke();
+      });
     }
 
     function resizeCanvas() {
@@ -390,15 +646,17 @@ function InvestigationRouteCanvas({
 }
 
 function eventWindow(activeIndex: number) {
-  const maxStart = Math.max(0, simulationOperations.length - 5);
-  const start = Math.min(maxStart, Math.max(0, activeIndex - 2));
-  return simulationOperations.slice(start, start + 5);
+  return operationWaveRecords(activeIndex).map(({ operation }) => operation);
 }
 
 function selectedOperationForAgent(agentId: string, activeIndex: number) {
   return (
-    latestOperationForAgent(agentId, activeIndex) ??
-    nextOperationForAgent(agentId, activeIndex)
+    concurrentOperationForAgent(agentId, activeIndex) ??
+    latestOperationForAgent(agentId, activeIndex - 1) ??
+    nextOperationForAgent(
+      agentId,
+      activeIndex + simulationOperationsPerWave - 1,
+    )
   );
 }
 
@@ -410,9 +668,11 @@ function localizedOperationLabel(
 }
 
 export function InvestigationOperationsBoard({
+  isPlaying,
   onAdvance,
   revealedCount,
 }: {
+  isPlaying: boolean;
   onAdvance: () => void;
   revealedCount: number;
 }) {
@@ -423,6 +683,22 @@ export function InvestigationOperationsBoard({
     Math.min(revealedCount - 1, simulationOperations.length - 1),
   );
   const activeOperation = simulationOperations[activeOperationIndex];
+  const activeWaveOperations = operationWaveRecords(activeOperationIndex);
+  const workingWaveOperations = previousWaveRecords(activeOperationIndex);
+  const engagedWaveOperations = [
+    ...workingWaveOperations,
+    ...activeWaveOperations,
+  ];
+  const activeWaveNumber =
+    Math.floor(activeOperationIndex / simulationOperationsPerWave) + 1;
+  const parentModuleNumber = Math.floor(activeOperationIndex / 4) + 1;
+  const parentModulePass =
+    Math.floor(activeOperationIndex / simulationOperationsPerWave) % 2 ===
+    0
+      ? "A"
+      : "B";
+  const activeStation = simulationStationById(activeOperation.stationId);
+  const ActiveOperationIcon = operationIconByKind[activeOperation.kind];
   const [pinnedAgentId, setPinnedAgentId] = useState<string | null>(null);
   const selectedAgentId = pinnedAgentId ?? activeOperation.agentId;
   const selectedAgentIndex = localizedScenario.personas.findIndex(
@@ -434,6 +710,12 @@ export function InvestigationOperationsBoard({
     activeOperationIndex,
   )!;
   const selectedOperation = selectedOperationRecord.operation;
+  const selectedIsLive = activeWaveOperations.some(
+    ({ index }) => index === selectedOperationRecord.index,
+  );
+  const selectedIsWorking = workingWaveOperations.some(
+    ({ index }) => index === selectedOperationRecord.index,
+  );
   const SelectedOperationIcon = operationIconByKind[selectedOperation.kind];
   const selectedStation = simulationStationById(selectedOperation.stationId);
   const visibleEvents = useMemo(
@@ -441,8 +723,12 @@ export function InvestigationOperationsBoard({
     [activeOperationIndex],
   );
   const hasMoreOperations =
-    activeOperationIndex < simulationOperations.length - 1;
-  const nextOperation = simulationOperations[activeOperationIndex + 1];
+    activeOperationIndex + simulationOperationsPerWave <
+    simulationOperations.length;
+  const nextOperation =
+    simulationOperations[
+      activeOperationIndex + simulationOperationsPerWave
+    ];
 
   function advanceFromBoard() {
     setPinnedAgentId(null);
@@ -455,37 +741,39 @@ export function InvestigationOperationsBoard({
       className="investigation-operations-board"
       data-hardcoded-replay="true"
       data-network-actions="0"
+      data-playing={isPlaying ? "true" : "false"}
     >
       <header className="operations-board-header">
         <div>
           <p>FIELD OPERATIONS · HARDCODED SANDBOX</p>
           <h2 id="investigation-operations-title">
             {choose(
-              "Watch the investigation move, not just the final answer.",
-              "直接看见调查如何一步步发生。",
+              "Smaller waves. Continuous investigation.",
+              "更细波次，持续调查。",
             )}
           </h2>
           <span>
             {choose(
-              "Each character moves through a different operation: search, role framing, routing, inquiry staging, comparison, challenge, approval, and evidence lock.",
-              "每个角色会经过不同动作：检索、装载角色、选择渠道、暂存询问、交叉对照、设计追问、人工审批和证据锁定。",
+              "Each original four-agent module is split into two overlapping passes. Two agents move while the previous pair keeps working. This is a local replay, not live outreach.",
+              "每个原四 Agent 模块拆成两个重叠小段：两名 Agent 缓慢进入，上一组继续工作。这里是本地回放，不是真实外联。",
             )}
           </span>
         </div>
 
         <dl aria-label={choose("Sandbox operation status", "沙盒操作状态")}>
           <div>
-            <dt>{choose("Local agents", "本地 Agent")}</dt>
-            <dd>12</dd>
+            <dt>{choose("Agents moving", "行进 Agent")}</dt>
+            <dd>{simulationOperationsPerWave}</dd>
           </div>
           <div>
-            <dt>{choose("Operation types", "操作类型")}</dt>
-            <dd>16</dd>
+            <dt>{choose("Agents working", "工作中 Agent")}</dt>
+            <dd>{workingWaveOperations.length}</dd>
           </div>
           <div>
-            <dt>{choose("Current event", "当前事件")}</dt>
-            <dd>
-              {activeOperation.code}/{simulationOperations.length}
+            <dt>{choose("Current segment", "当前细分段")}</dt>
+            <dd className="operations-current-count" key={activeOperation.id}>
+              {String(activeWaveNumber).padStart(2, "0")}/
+              {String(simulationOperationWaveCount).padStart(2, "0")}
             </dd>
           </div>
           <div className="truth">
@@ -496,36 +784,76 @@ export function InvestigationOperationsBoard({
       </header>
 
       <div className="operations-board-grid">
-        <div className="operations-floor">
+        <div
+          className="operations-floor"
+          style={
+            {
+              "--focus-x": `${activeStation.x}%`,
+              "--focus-y": `${activeStation.y}%`,
+            } as CSSProperties
+          }
+        >
           <Image
             alt=""
             aria-hidden
             className="operations-floor-image"
             fill
             sizes="(max-width: 960px) 100vw, 980px"
-            src="/lrwa-agent-field-map-bg.webp"
+            src="/lrwa-virtual-store-comic.webp"
             unoptimized
           />
           <div className="operations-floor-shade" aria-hidden />
+          <div className="operations-comic-ink" aria-hidden />
           <InvestigationRouteCanvas
             activeOperationIndex={activeOperationIndex}
           />
+          <div
+            aria-hidden
+            className="operation-panel-cut"
+            key={`panel-cut-${activeOperation.id}`}
+          >
+            <i />
+            <i />
+            <i />
+          </div>
+          <div className="virtual-store-caption">
+            <span>{choose("ILLUSTRATIVE STORE TWIN", "示例门店孪生体")}</span>
+            <strong>
+              {choose(
+                "Starbucks · Jing'an Kerry Centre",
+                "星巴克 · 上海静安嘉里中心",
+              )}
+            </strong>
+            <small>{choose("No live store data", "不含实时门店数据")}</small>
+          </div>
 
-          <div className="operations-floor-status">
-            <DataConnected size={15} aria-hidden />
+          <div
+            className="operations-floor-status"
+            key={`floor-status-${activeOperation.id}`}
+          >
+            <ActiveOperationIcon size={15} aria-hidden />
             <div>
               <span>
-                OP {activeOperation.code} ·{" "}
-                {simulationOperationKindLabels[activeOperation.kind][locale]}
+                SEGMENT {String(activeWaveNumber).padStart(2, "0")} ·{" "}
+                {simulationOperationsPerWave}{" "}
+                {choose("AGENTS MOVING", "个 AGENT 行进")}
               </span>
               <strong>{localizedOperationLabel(activeOperation, locale)}</strong>
             </div>
-            <small>{choose("LOCAL REPLAY", "本地回放")}</small>
+            <small>
+              {choose("MODULE", "模块")}{" "}
+              {String(parentModuleNumber).padStart(2, "0")}
+              {parentModulePass}
+            </small>
           </div>
 
           {simulationStations.map((station) => {
             const StationIcon = stationIconById[station.id];
-            const isActive = station.id === activeOperation.stationId;
+            const activeStationOperationCount = engagedWaveOperations.filter(
+              ({ operation }) => operation.stationId === station.id,
+            ).length;
+            const isActive = activeStationOperationCount > 0;
+            const isFocused = station.id === activeOperation.stationId;
             const hasCompletedOperation = simulationOperations.some(
               (operation, index) =>
                 index < activeOperationIndex &&
@@ -534,6 +862,8 @@ export function InvestigationOperationsBoard({
             return (
               <div
                 className={`operation-station${isActive ? " active" : ""}${
+                  isFocused ? " focused" : ""
+                }${
                   hasCompletedOperation ? " visited" : ""
                 }`}
                 data-station={station.id}
@@ -550,6 +880,11 @@ export function InvestigationOperationsBoard({
                   <span>{station.shortLabel[locale]}</span>
                   <strong>{station.label[locale]}</strong>
                 </div>
+                {activeStationOperationCount > 1 && (
+                  <em aria-label={`${activeStationOperationCount} agents`}>
+                    {activeStationOperationCount}×
+                  </em>
+                )}
               </div>
             );
           })}
@@ -571,23 +906,49 @@ export function InvestigationOperationsBoard({
                 activeOperationIndex,
               );
               const isSelected = agent.id === selectedAgentId;
-              const latestOperation = latestOperationForAgent(
+              const concurrentOperation = concurrentOperationForAgent(
                 agent.id,
                 activeOperationIndex,
+              );
+              const workingOperation = workingOperationForAgent(
+                agent.id,
+                activeOperationIndex,
+              );
+              const latestOperation = latestOperationForAgent(
+                agent.id,
+                activeOperationIndex - 1,
               );
               const upcomingOperation = nextOperationForAgent(
                 agent.id,
-                activeOperationIndex,
+                activeOperationIndex + simulationOperationsPerWave - 1,
               );
               const displayedOperation =
-                latestOperation?.operation ?? upcomingOperation?.operation;
+                concurrentOperation?.operation ??
+                workingOperation?.operation ??
+                latestOperation?.operation ??
+                upcomingOperation?.operation;
               const actionLabel = displayedOperation
                 ? localizedOperationLabel(displayedOperation, locale)
                 : choose("No assigned event", "暂无分配事件");
+              const engagedOperation =
+                concurrentOperation ?? workingOperation;
               const mode =
-                state === "active"
-                  ? activeOperation.spriteMode
-                  : ("wait" as const);
+                engagedOperation?.operation.spriteMode ?? "wait";
+              const AgentOperationIcon = engagedOperation
+                ? operationIconByKind[engagedOperation.operation.kind]
+                : DataConnected;
+              const facing = facingForAgent(
+                agent.id,
+                activeOperationIndex,
+                state,
+              );
+              const waveOrder = concurrentOperation
+                ? concurrentOperation.index - activeOperationIndex
+                : 0;
+              const originPosition = concurrentOperation
+                ? operationOriginPosition(concurrentOperation.index)
+                : position;
+              const travelDuration = agentTravelDurationMs;
 
               return (
                 <button
@@ -598,14 +959,34 @@ export function InvestigationOperationsBoard({
                   aria-pressed={isSelected}
                   className={`field-agent ${state}${
                     isSelected ? " selected" : ""
-                  }`}
+                  }${position.x > 78 ? " label-left" : ""} facing-${facing}`}
+                  data-operation-kind={
+                    engagedOperation?.operation.kind
+                  }
+                  data-wave-active={concurrentOperation ? "true" : undefined}
+                  data-wave-working={workingOperation ? "true" : undefined}
                   id={`simulation-inquiry-${agent.id}`}
-                  key={agent.id}
+                  key={`${agent.id}-${
+                    engagedOperation?.operation.id ?? state
+                  }`}
                   onClick={() => setPinnedAgentId(agent.id)}
                   style={
                     {
-                      "--agent-x": `${position.x}%`,
-                      "--agent-y": `${position.y}%`,
+                      "--agent-delay": `${
+                        agentTravelLeadInMs +
+                        waveOrder * agentTravelStaggerMs
+                      }ms`,
+                      "--agent-from-x": `${originPosition.x}cqw`,
+                      "--agent-from-y": `${originPosition.y}cqh`,
+                      "--agent-hue": `${
+                        ((agentIndex % spriteSheetCount) -
+                          (spriteSheetCount - 1) / 2) *
+                          6 +
+                        Math.floor(agentIndex / spriteSheetCount) * 32
+                      }deg`,
+                      "--agent-travel-duration": `${travelDuration}ms`,
+                      "--agent-x": `${position.x}cqw`,
+                      "--agent-y": `${position.y}cqh`,
                     } as CSSProperties
                   }
                   type="button"
@@ -613,20 +994,36 @@ export function InvestigationOperationsBoard({
                   <span className="field-agent-code">{agent.id}</span>
                   <span
                     aria-hidden
+                    className="field-agent-effect"
+                    key={`effect-${
+                      engagedOperation?.operation.id ?? state
+                    }`}
+                  />
+                  <span
+                    aria-hidden
                     className={`field-agent-sprite ${spriteClass(state, mode)}`}
+                    key={`sprite-${
+                      engagedOperation?.operation.id ?? state
+                    }`}
                     style={{
                       backgroundImage: `url("/pixel-agents/char_${
                         agentIndex % spriteSheetCount
                       }.png")`,
                     }}
                   />
-                  {state === "active" && (
-                    <span className="field-agent-action">
-                      {
-                        simulationOperationKindLabels[activeOperation.kind][
-                          locale
-                        ]
-                      }
+                  {engagedOperation && (
+                    <span
+                      className={`field-agent-action${
+                        workingOperation ? " continuing" : ""
+                      }`}
+                    >
+                      <AgentOperationIcon size={11} aria-hidden />
+                      {workingOperation
+                        ? choose("WORKING", "工作中")
+                        :
+                        simulationOperationKindLabels[
+                          engagedOperation.operation.kind
+                        ][locale]}
                     </span>
                   )}
                 </button>
@@ -638,8 +1035,8 @@ export function InvestigationOperationsBoard({
             <Locked size={14} aria-hidden />
             <span>
               {choose(
-                "Characters and events are a prebuilt local replay. No store or platform is contacted.",
-                "角色和事件均为预制本地回放，不会联系任何门店或平台。",
+                "The store twin, characters, and events are illustrative. No store or platform is contacted.",
+                "门店孪生体、角色和事件均为示例，不会联系任何真实门店或平台。",
               )}
             </span>
           </div>
@@ -668,67 +1065,78 @@ export function InvestigationOperationsBoard({
             </button>
           </header>
 
-          <div className="operation-dossier-title">
-            <span>
-              {simulationOperationKindLabels[selectedOperation.kind][locale]} ·{" "}
-              {selectedStation.shortLabel[locale]}
-            </span>
-            <small>
-              {selectedOperationRecord.index <= activeOperationIndex
-                ? choose("VIEWED IN REPLAY", "已在回放中呈现")
-                : choose("UPCOMING EVENT", "后续事件")}
-            </small>
+          <div
+            className="operation-dossier-live"
+            key={`${selectedOperation.id}-${activeOperation.id}-${
+              pinnedAgentId ?? "follow"
+            }`}
+          >
+            <div className="operation-dossier-title">
+              <span>
+                {simulationOperationKindLabels[selectedOperation.kind][locale]}{" "}
+                · {selectedStation.shortLabel[locale]}
+              </span>
+              <small>
+                {selectedIsLive
+                  ? choose("MOVING IN CURRENT SEGMENT", "当前细分段行进")
+                  : selectedIsWorking
+                    ? choose("WORKING FROM PRIOR PASS", "上一小段继续工作")
+                  : selectedOperationRecord.index < activeOperationIndex
+                    ? choose("VIEWED IN REPLAY", "已在回放中呈现")
+                    : choose("UPCOMING EVENT", "后续事件")}
+              </small>
+            </div>
+
+            <div className="operation-dossier-heading">
+              <SelectedOperationIcon size={24} aria-hidden />
+              <div>
+                <h3>{localizedOperationLabel(selectedOperation, locale)}</h3>
+                <p>
+                  {selectedAgent.id} · {selectedAgent.cohort}
+                </p>
+              </div>
+            </div>
+
+            <p className="operation-dossier-detail">
+              {selectedOperation.detail[locale]}
+            </p>
+
+            <dl className="operation-dossier-meta">
+              <div>
+                <dt>{choose("Station", "所在工作站")}</dt>
+                <dd>{selectedStation.label[locale]}</dd>
+              </div>
+              <div>
+                <dt>{choose("Fact gaps", "覆盖缺口")}</dt>
+                <dd>{selectedOperation.factIds.join(" / ")}</dd>
+              </div>
+              <div>
+                <dt>{choose("Evidence state", "证据状态")}</dt>
+                <dd className="warning">
+                  {selectedOperation.evidenceState[locale]}
+                </dd>
+              </div>
+              <div>
+                <dt>{choose("Network action", "网络动作")}</dt>
+                <dd className="disabled">
+                  {choose("Disabled · 0 sends", "禁用 · 0 次发送")}
+                </dd>
+              </div>
+            </dl>
+
+            <section className="operation-artifact">
+              <span>{choose("LOCAL OUTPUT", "本地产物")}</span>
+              <strong>{selectedOperation.output[locale]}</strong>
+            </section>
+
+            <section className="operation-next-condition">
+              <ArrowRight size={16} aria-hidden />
+              <div>
+                <span>{choose("NEXT CONDITION", "下一条件")}</span>
+                <p>{selectedOperation.nextCondition[locale]}</p>
+              </div>
+            </section>
           </div>
-
-          <div className="operation-dossier-heading">
-            <SelectedOperationIcon size={24} aria-hidden />
-            <div>
-              <h3>{localizedOperationLabel(selectedOperation, locale)}</h3>
-              <p>
-                {selectedAgent.id} · {selectedAgent.cohort}
-              </p>
-            </div>
-          </div>
-
-          <p className="operation-dossier-detail">
-            {selectedOperation.detail[locale]}
-          </p>
-
-          <dl className="operation-dossier-meta">
-            <div>
-              <dt>{choose("Station", "所在工作站")}</dt>
-              <dd>{selectedStation.label[locale]}</dd>
-            </div>
-            <div>
-              <dt>{choose("Fact gaps", "覆盖缺口")}</dt>
-              <dd>{selectedOperation.factIds.join(" / ")}</dd>
-            </div>
-            <div>
-              <dt>{choose("Evidence state", "证据状态")}</dt>
-              <dd className="warning">
-                {selectedOperation.evidenceState[locale]}
-              </dd>
-            </div>
-            <div>
-              <dt>{choose("Network action", "网络动作")}</dt>
-              <dd className="disabled">
-                {choose("Disabled · 0 sends", "禁用 · 0 次发送")}
-              </dd>
-            </div>
-          </dl>
-
-          <section className="operation-artifact">
-            <span>{choose("LOCAL OUTPUT", "本地产物")}</span>
-            <strong>{selectedOperation.output[locale]}</strong>
-          </section>
-
-          <section className="operation-next-condition">
-            <ArrowRight size={16} aria-hidden />
-            <div>
-              <span>{choose("NEXT CONDITION", "下一条件")}</span>
-              <p>{selectedOperation.nextCondition[locale]}</p>
-            </div>
-          </section>
 
           <div className="operation-dossier-lock">
             <Locked size={15} aria-hidden />
@@ -750,11 +1158,15 @@ export function InvestigationOperationsBoard({
             const state =
               operationIndex === activeOperationIndex
                 ? "current"
-                : operationIndex < activeOperationIndex
-                  ? "complete"
-                  : "queued";
+                : operation.id === selectedOperation.id
+                  ? "live selected"
+                  : "live";
             return (
-              <li className={state} key={operation.id}>
+              <li
+                className={state}
+                data-operation-kind={operation.kind}
+                key={operation.id}
+              >
                 <OperationIcon size={15} aria-hidden />
                 <span>{operation.code}</span>
                 <div>
@@ -771,12 +1183,14 @@ export function InvestigationOperationsBoard({
         <button onClick={advanceFromBoard} type="button">
           <span>
             {hasMoreOperations
-              ? choose("Next operation", "下一操作")
+              ? choose("Next segment", "下一细分段")
               : choose("Open response branches", "进入响应分支")}
           </span>
           <small>
             {hasMoreOperations
-              ? `${nextOperation.code} · ${localizedOperationLabel(
+              ? `${choose("Segment", "细分段")} ${String(
+                  activeWaveNumber + 1,
+                ).padStart(2, "0")} · ${localizedOperationLabel(
                   nextOperation,
                   locale,
                 )}`

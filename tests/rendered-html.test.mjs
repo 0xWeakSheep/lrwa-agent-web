@@ -480,15 +480,39 @@ test("server-renders the bilingual sandbox with explicit zero-action state", asy
   assert.match(operationsHtml, /HARDCODED SANDBOX/);
   assert.match(
     operationsHtml,
-    /Watch the investigation move, not just the final answer/,
+    /Smaller waves\. Continuous investigation\./,
   );
-  assert.match(operationsHtml, /Operation types/);
+  assert.match(operationsHtml, /Agents moving/);
+  assert.match(operationsHtml, /Agents working/);
+  assert.match(operationsHtml, /01\/08/);
   assert.match(operationsHtml, /SEARCH/);
   assert.match(operationsHtml, /INSPECT/);
-  assert.match(operationsHtml, /LOAD ROLE/);
-  assert.match(operationsHtml, /ROUTE/);
+  assert.match(operationsHtml, /lrwa-virtual-store-comic\.webp/);
+  assert.match(operationsHtml, /ILLUSTRATIVE STORE TWIN/);
+  assert.match(operationsHtml, /No live store data/);
   assert.match(operationsHtml, /data-hardcoded-replay="true"/);
   assert.match(operationsHtml, /data-network-actions="0"/);
+  const initialWaveAgents = [
+    ...operationsHtml.matchAll(
+      /<button\b[^>]*data-wave-active="true"[^>]*>/g,
+    ),
+  ].map((match) => match[0]);
+  assert.equal(initialWaveAgents.length, 2);
+  const initialWaveKinds = initialWaveAgents.map(
+    (tag) => tag.match(/data-operation-kind="([^"]+)"/)?.[1],
+  );
+  assert.deepEqual([...new Set(initialWaveKinds)].sort(), [
+    "inspect",
+    "search",
+  ]);
+  assert.equal(
+    [
+      ...operationsHtml.matchAll(
+        /<li\b[^>]*data-operation-kind="[^"]+"[^>]*>/g,
+      ),
+    ].length,
+    2,
+  );
 
   for (const html of [englishHtml, chineseHtml]) {
     assert.match(html, /aria-live="polite"/);
@@ -827,6 +851,9 @@ test("keeps the simulation isolated from contact and evidence writes", async () 
   await access(
     new URL("../public/lrwa-agent-field-map-bg.webp", import.meta.url),
   );
+  await access(
+    new URL("../public/lrwa-virtual-store-comic.webp", import.meta.url),
+  );
   await Promise.all(
     Array.from({ length: 6 }, (_, index) =>
       access(
@@ -864,8 +891,10 @@ test("keeps the simulation isolated from contact and evidence writes", async () 
   assert.match(agentFieldSource, /localizedScenario\.personas\.map/);
   assert.match(agentFieldSource, /simulationStations\.map/);
   assert.match(agentFieldSource, /simulationOperations\.some/);
-  assert.match(agentFieldSource, /\/lrwa-agent-field-map-bg\.webp/);
+  assert.match(agentFieldSource, /\/lrwa-virtual-store-comic\.webp/);
   assert.match(agentFieldSource, /\/pixel-agents\/char_/);
+  assert.match(agentFieldSource, /data-wave-active=/);
+  assert.match(agentFieldSource, /data-wave-working=/);
   assert.match(agentFieldSource, /function InvestigationRouteCanvas/);
   assert.match(
     agentFieldSource,
@@ -884,10 +913,17 @@ test("keeps the simulation isolated from contact and evidence writes", async () 
   assert.match(styles, /\.field-agent-sprite/);
   assert.match(styles, /\/lrwa-role-orchestration-bg\.webp/);
   assert.match(agentFieldSource, /aria-pressed=\{isSelected\}/);
-  assert.match(agentFieldSource, /Next operation/);
-  assert.match(agentFieldSource, /下一操作/);
+  assert.match(agentFieldSource, /Next segment/);
+  assert.match(agentFieldSource, /下一细分段/);
   assert.match(agentFieldSource, /Disabled · 0 sends/);
   assert.match(agentFieldSource, /禁用 · 0 次发送/);
+  assert.match(operationsSource, /simulationOperationsPerWave = 2/);
+  assert.match(source, /inquiryOperationPlaybackMs = 7200/);
+  assert.match(styles, /@keyframes field-agent-travel/);
+  assert.match(styles, /@keyframes field-agent-effect-scan/);
+  assert.match(styles, /@keyframes field-agent-effect-route/);
+  assert.match(styles, /@keyframes field-agent-effect-crosscheck/);
+  assert.match(styles, /@keyframes field-agent-effect-seal/);
   assert.equal(
     [...operationsSource.matchAll(/synthetic: true,/g)].length,
     16,
@@ -896,6 +932,22 @@ test("keeps the simulation isolated from contact and evidence writes", async () 
     [...operationsSource.matchAll(/networkAction: false,/g)].length,
     16,
   );
+  const operationAgentIds = [
+    ...operationsSource.matchAll(/agentId: "(P-\d+)"/g),
+  ].map((match) => match[1]);
+  assert.equal(operationAgentIds.length, 16);
+  for (let waveStart = 0; waveStart < operationAgentIds.length; waveStart += 2) {
+    assert.equal(
+      new Set(operationAgentIds.slice(waveStart, waveStart + 2)).size,
+      2,
+    );
+  }
+  assert.equal(new Set(operationAgentIds).size, 12);
+  const operationKinds = [
+    ...operationsSource.matchAll(/kind: "([^"]+)",/g),
+  ].map((match) => match[1]);
+  assert.equal(operationKinds.length, 16);
+  assert.equal(new Set(operationKinds).size, 16);
   assert.doesNotMatch(operationsSource, /networkAction: true/);
   assert.match(operationsSource, /NOT EXECUTED/);
   assert.match(operationsSource, /CONCLUSION LOCKED/);

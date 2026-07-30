@@ -59,6 +59,8 @@ export type SimulationStation = Readonly<{
   y: number;
 }>;
 
+export const simulationOperationsPerWave = 2;
+
 export const simulationStations: readonly SimulationStation[] = [
   {
     id: "sources",
@@ -597,6 +599,10 @@ export const simulationOperations: readonly SimulationOperation[] = [
     networkAction: false,
   },
 ] as const;
+
+export const simulationOperationWaveCount = Math.ceil(
+  simulationOperations.length / simulationOperationsPerWave,
+);
 
 export function simulationStationById(stationId: SimulationStationId) {
   return simulationStations.find((station) => station.id === stationId)!;
